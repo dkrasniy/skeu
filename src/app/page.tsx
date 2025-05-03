@@ -6,11 +6,15 @@ export default async function Home() {
   const supabase = await createClient()
 
   const { data, error } = await supabase.auth.getUser()
-  
+
+  //fetch user data from supabase from users table 
+  const { data: userData, error: userError } = await supabase.from('users').select('full_name').eq('id', data?.user?.id)
+
   if (data?.user) { 
     return <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
     <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
       <h1>Welcome back, {data?.user?.email}</h1>
+      {userData && <h2>Full Name: {userData?.[0]?.full_name}</h2>}  
       <Image
         className="dark:invert"
         src="/next.svg"
