@@ -1,3 +1,4 @@
+import { createClient } from '@/lib/supabase/server'
 import { BentoCard } from '../components/bento-card'
 import { Button } from '../components/button'
 import { Container } from '../components/container'
@@ -25,15 +26,16 @@ export const metadata: Metadata = {
 // skeu helps you create beautiful mockups and screenshots of whatever you are designing and working on.. 
 // create custom canvas, crop, change background and more and by draging and dropping in your image
 
-function Hero() {
+async function Hero({ user }: { user?: any }) {
+  
   return (
     <div className="relative">
       <Gradient className="absolute inset-2 bottom-0 rounded-4xl ring-1 ring-black/5 ring-inset" />
       <Container className="relative">
-        <Navbar />
+        <Navbar user={user} />
         <div className="pt-16 pb-24 sm:pt-24 sm:pb-32 md:pt-32 md:pb-48">
-          <h1 className="font-display text-3xl/[0.9] font-medium tracking-tight text-balance text-gray-950 sm:text-4xl/[0.8] md:text-5xl/[0.8]">
-            Create stunning device mockups in seconds
+          <h1 className="font-display text-3xl/[0.9] font-extrabold tracking-tighter text-balance text-gray-950 sm:text-4xl/[0.8] md:text-5xl/[0.8]">
+            Create Stunning Device Mockups<br/> <span className="italic">in Seconds</span>
           </h1>
           <p className="mt-8 max-w-lg text-xl/7 font-medium text-gray-950/75 sm:text-2xl/8">
             Transform your screenshots into professional presentations with beautiful device frames, custom backgrounds, and perfect lighting.
@@ -202,10 +204,13 @@ function DarkBentoSection() {
   )
 }
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.getUser()
   return (
     <div className="overflow-hidden">
-      <Hero />
+      
+      <Hero user={data?.user} />
       <main>
         <Container className="mt-10">
           <LogoCloud />
