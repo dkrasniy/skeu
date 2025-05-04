@@ -52,7 +52,7 @@ export function ScreenshotEditor() {
     <div className="flex flex-col gap-6 p-6 bg-background rounded-lg border">
       <div className="flex gap-6">
         {/* Preview Area */}
-        <div className="flex-1 min-h-[600px] bg-muted rounded-lg">
+        <div className="flex-1 min-h-[600px]  max-h-[80vh] bg-muted rounded-lg">
           {editorState.image ? (
             <FramePreview state={editorState} />
           ) : (
