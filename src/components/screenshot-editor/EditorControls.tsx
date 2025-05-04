@@ -9,6 +9,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { EditorState } from './types';
+import {
+  WindowIcon,
+  ArrowsPointingOutIcon,
+  Square2StackIcon,
+  ArrowPathIcon,
+  CubeTransparentIcon,
+  ArrowsUpDownIcon,
+  SwatchIcon,
+  ArrowsRightLeftIcon,
+} from '@heroicons/react/24/outline';
 
 interface EditorControlsProps {
   state: EditorState;
@@ -34,13 +44,20 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
     onChange({ background: newBackground });
   };
 
+  const ControlLabel = ({ icon: Icon, children }: { icon: React.ComponentType<{ className?: string }>, children: React.ReactNode }) => (
+    <div className="flex items-center gap-2">
+      <Icon className="w-4 h-4 text-muted-foreground" />
+      <Label>{children}</Label>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <Card>
         <CardContent className="pt-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Frame</Label>
+              <ControlLabel icon={WindowIcon}>Frame</ControlLabel>
               <Select
                 value={state.frame}
                 onValueChange={(value: typeof state.frame) => onChange({ frame: value })}
@@ -59,7 +76,7 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Size</Label>
+              <ControlLabel icon={ArrowsPointingOutIcon}>Size</ControlLabel>
               <Slider
                 value={[state.size]}
                 onValueChange={([value]) => onChange({ size: value })}
@@ -70,7 +87,7 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Roundness</Label>
+              <ControlLabel icon={Square2StackIcon}>Roundness</ControlLabel>
               <Slider
                 value={[state.roundness]}
                 onValueChange={([value]) => onChange({ roundness: value })}
@@ -81,7 +98,7 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Shadow</Label>
+              <ControlLabel icon={CubeTransparentIcon}>Shadow</ControlLabel>
               <Slider
                 value={[state.shadow]}
                 onValueChange={([value]) => onChange({ shadow: value })}
@@ -92,7 +109,7 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Rotate</Label>
+              <ControlLabel icon={ArrowPathIcon}>Rotate</ControlLabel>
               <Slider
                 value={[state.rotate]}
                 onValueChange={([value]) => onChange({ rotate: value })}
@@ -103,7 +120,7 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Tilt</Label>
+              <ControlLabel icon={ArrowsUpDownIcon}>Tilt</ControlLabel>
               <Slider
                 value={[state.tilt]}
                 onValueChange={([value]) => onChange({ tilt: value })}
@@ -115,7 +132,7 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
 
             {/* Position Controls */}
             <div className="space-y-4">
-              <Label>Position</Label>
+              <ControlLabel icon={ArrowsRightLeftIcon}>Position</ControlLabel>
               
               {/* 3x3 Grid Presets */}
               <div className="grid grid-cols-3 gap-2 mb-4">
@@ -167,7 +184,7 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
 
       <Card>
         <CardContent className="pt-6">
-          <Label>Background</Label>
+          <ControlLabel icon={SwatchIcon}>Background</ControlLabel>
           <Tabs 
             defaultValue={state.background.type} 
             className="mt-2"

@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useCallback, DragEvent } from 'react';
 import { ImageDropzone } from './ImageDropzone';
 import { EditorControls } from './EditorControls';
 import { FramePreview } from './FramePreview';
@@ -24,13 +24,39 @@ export function ScreenshotEditor() {
     position: { x: 0, y: 0 },
   });
 
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+
   const handleImageDrop = (file: File) => {
     setEditorState((prev) => ({ ...prev, image: file }));
+    setIsDraggingOver(false);
   };
 
   const updateEditorState = (updates: Partial<EditorState>) => {
     setEditorState((prev) => ({ ...prev, ...updates }));
   };
+
+  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      handleImageDrop(file);
+    }
+    setIsDraggingOver(false);
+  }, []);
 
   // Extract the main color from background for sunburst
   const getBackgroundColor = () => {
@@ -45,7 +71,22 @@ export function ScreenshotEditor() {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6 bg-background rounded-lg border">
+    <div 
+      className="flex flex-col gap-6 p-6 bg-background rounded-lg border relative"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {isDraggingOver && (
+        <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-lg border-2 border-dashed border-primary">
+          <div className="text-center">
+            <p className="text-lg font-medium">
+              {editorState.image ? 'Drop to replace image' : 'Drop to add image'}
+            </p>
+            <p className="text-sm text-muted-foreground">PNG, JPG, GIF up to 10MB</p>
+          </div>
+        </div>
+      )}
       <div className="flex gap-6">
         {/* Preview Area */}
         <div className="relative mt-2 lg:mb-5 lg:mx-0 overflow-hidden w-full flex-1 flex flex-col items-stretch max-h-[90vh] h-full relative">
