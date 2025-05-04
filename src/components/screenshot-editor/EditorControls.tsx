@@ -9,26 +9,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 
-interface EditorControlsProps {
-  state: {
-    frame: string;
-    size: number;
-    roundness: number;
-    shadow: number;
-    rotate: number;
-    tilt: number;
-    background: {
-      type: string;
-      color?: string;
-      gradient?: string;
-      showSunburst?: boolean;
-    };
-    position: {
-      x: number;
-      y: number;
-    };
+interface EditorState {
+  frame: string;
+  size: number;
+  roundness: number;
+  shadow: number;
+  rotate: number;
+  tilt: number;
+  background: {
+    type: string;
+    color?: string;
+    gradient?: string;
+    showSunburst?: boolean;
   };
-  onChange: (updates: Partial<typeof state>) => void;
+  position: {
+    x: number;
+    y: number;
+  };
+}
+
+interface EditorControlsProps {
+  state: EditorState;
+  onChange: (updates: Partial<EditorState>) => void;
 }
 
 // Grid positions for the 3x3 preset grid
