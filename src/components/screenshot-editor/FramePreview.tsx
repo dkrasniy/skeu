@@ -5,27 +5,10 @@ import { MacOSFrame } from './frames/MacOSFrame';
 import { WindowsFrame } from './frames/WindowsFrame';
 import { BrowserFrame } from './frames/BrowserFrame';
 import { SunburstPattern } from './SunburstPattern';
+import { EditorState } from './types';
 
 interface FramePreviewProps {
-  state: {
-    image: File | null;
-    frame: 'none' | 'macOS Light' | 'macOS Dark' | 'Windows' | 'Browser';
-    size: number;
-    roundness: number;
-    shadow: number;
-    rotate: number;
-    tilt: number;
-    background: {
-      type: 'none' | 'solid' | 'gradient';
-      color?: string;
-      gradient?: string;
-      showSunburst?: boolean;
-    };
-    position: {
-      x: number;
-      y: number;
-    };
-  };
+  state: EditorState;
 }
 
 export function FramePreview({ state }: FramePreviewProps) {

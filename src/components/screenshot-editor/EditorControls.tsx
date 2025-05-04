@@ -8,25 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-
-interface EditorState {
-  frame: string;
-  size: number;
-  roundness: number;
-  shadow: number;
-  rotate: number;
-  tilt: number;
-  background: {
-    type: string;
-    color?: string;
-    gradient?: string;
-    showSunburst?: boolean;
-  };
-  position: {
-    x: number;
-    y: number;
-  };
-}
+import { EditorState } from './types';
 
 interface EditorControlsProps {
   state: EditorState;
@@ -41,7 +23,7 @@ const GRID_POSITIONS = [
 ];
 
 export function EditorControls({ state, onChange }: EditorControlsProps) {
-  const handleBackgroundTypeChange = (type: string) => {
+  const handleBackgroundTypeChange = (type: 'none' | 'solid' | 'gradient') => {
     const newBackground = {
       ...state.background,
       type,
@@ -61,7 +43,7 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
               <Label>Frame</Label>
               <Select
                 value={state.frame}
-                onValueChange={(value) => onChange({ frame: value })}
+                onValueChange={(value: typeof state.frame) => onChange({ frame: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select frame style" />

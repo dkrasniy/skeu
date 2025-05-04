@@ -5,26 +5,7 @@ import { EditorControls } from './EditorControls';
 import { FramePreview } from './FramePreview';
 import { ExportOptions } from './ExportOptions';
 import { SunburstPattern } from './SunburstPattern';
-
-interface EditorState {
-  image: File | null;
-  frame: 'none' | 'macOS Light' | 'macOS Dark' | 'Windows' | 'Browser';
-  size: number;
-  roundness: number;
-  shadow: number;
-  rotate: number;
-  tilt: number;
-  background: {
-    type: 'none' | 'solid' | 'gradient';
-    color?: string;
-    gradient?: string;
-    showSunburst?: boolean;
-  };
-  position: {
-    x: number;
-    y: number;
-  };
-}
+import { EditorState } from './types';
 
 export function ScreenshotEditor() {
   const [editorState, setEditorState] = useState<EditorState>({
