@@ -21,8 +21,13 @@ export default async function Home() {
     <SidebarProvider>
       {/* <AppSidebar />
       <SidebarInset> */} 
+      
         <div className="flex flex-1 flex-col gap-4   font-sans">
-        
+        <div className="flex flex-col items-center justify-center h-screen sm:hidden">
+          <h1 className="text-2xl font-bold">This is not supported on small screens</h1>
+        </div>
+
+       
           <ScreenshotEditor />
         </div>
       {/* </SidebarInset> */}
