@@ -9,6 +9,7 @@ import { EditorState } from './types';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import { createClient } from '@/utils/supabase/client';
+import Link from 'next/link';
 
 export function ScreenshotEditor({
   userData
@@ -115,7 +116,14 @@ export function ScreenshotEditor({
 
         {/* Controls Sidebar */}
         <div className="w-80 flex flex-col gap-4">
-          <Card>
+          
+         
+          <EditorControls 
+            state={editorState}
+            onChange={updateEditorState}
+          />
+          <ExportOptions state={editorState} />
+          {userData ? <Card>
             {userData?.email}
             <Button
             onClick={() => {
@@ -124,12 +132,9 @@ export function ScreenshotEditor({
                
             }}
             >Logout</Button>
-          </Card>
-          <EditorControls 
-            state={editorState}
-            onChange={updateEditorState}
-          />
-          <ExportOptions state={editorState} />
+          </Card>: <Card>
+            <Button asChild><Link href="/auth/login">Login</Link></Button>
+          </Card> }
         </div>
       </div>
     </div>
