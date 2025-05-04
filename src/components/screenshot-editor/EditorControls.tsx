@@ -171,7 +171,7 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
           <Tabs 
             defaultValue={state.background.type} 
             className="mt-2"
-            onValueChange={handleBackgroundTypeChange}
+            onValueChange={(value: string) => handleBackgroundTypeChange(value as 'none' | 'solid' | 'gradient')}
           >
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="none">None</TabsTrigger>

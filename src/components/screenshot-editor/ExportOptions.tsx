@@ -5,11 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import domtoimage from 'dom-to-image';
 import toast from 'react-hot-toast';
+import { EditorState } from './types';
 
 interface ExportOptionsProps {
-  state: {
-    image: File;
-  };
+  state: EditorState;
 }
 
 export function ExportOptions({ state }: ExportOptionsProps) {
