@@ -62,13 +62,11 @@ export function FramePreview({ state }: FramePreviewProps) {
         return (
           <div
             className="relative rounded-lg overflow-hidden"
-            style={commonProps.style}
           >
             <img
               src={imageUrl}
               alt="Preview"
               className="w-full h-full object-contain"
-             
             />
           </div>
         );
