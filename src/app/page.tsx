@@ -26,9 +26,9 @@ export default async function Home() {
         <div className="flex flex-col items-center justify-center h-screen sm:hidden">
           <h1 className="text-2xl font-bold">This is not supported on small screens</h1>
         </div>
-
-       
-          <ScreenshotEditor />
+ 
+      
+          <ScreenshotEditor  userData={data.user}/>
         </div>
       {/* </SidebarInset> */}
     </SidebarProvider>

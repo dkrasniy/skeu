@@ -6,8 +6,15 @@ import { FramePreview } from './FramePreview';
 import { ExportOptions } from './ExportOptions';
 import { SunburstPattern } from './SunburstPattern';
 import { EditorState } from './types';
+import { Card } from '../ui/card';
+import { Button } from '../ui/button';
+import { createClient } from '@/utils/supabase/client';
 
-export function ScreenshotEditor() {
+export function ScreenshotEditor({
+  userData
+}: {
+  userData: any
+}) {
   const [editorState, setEditorState] = useState<EditorState>({
     image: null,
     frame: 'macOS Light',
@@ -108,6 +115,16 @@ export function ScreenshotEditor() {
 
         {/* Controls Sidebar */}
         <div className="w-80 flex flex-col gap-4">
+          <Card>
+            {userData?.email}
+            <Button
+            onClick={() => {
+              const supabase = createClient()
+              supabase.auth.signOut()
+               
+            }}
+            >Logout</Button>
+          </Card>
           <EditorControls 
             state={editorState}
             onChange={updateEditorState}
