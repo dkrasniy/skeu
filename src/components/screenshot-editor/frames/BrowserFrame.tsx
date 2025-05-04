@@ -27,7 +27,7 @@ export function BrowserFrame({ imageUrl, size, roundness, shadow, style }: Brows
         </div>
         <div className="flex-1 mx-2">
           <div className="h-6 bg-white rounded-md px-3 text-sm flex items-center text-gray-600">
-            example.com
+            
           </div>
         </div>
       </div>
