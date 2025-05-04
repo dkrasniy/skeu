@@ -19,7 +19,7 @@ export function ScreenshotEditor() {
     background: {
       type: 'gradient',
       gradient: 'linear-gradient(45deg, #f3ec78, #af4261)',
-      showSunburst: false,
+      showSunburst: true,
     },
     position: { x: 0, y: 0 },
   });
