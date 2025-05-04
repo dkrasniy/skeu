@@ -8,15 +8,15 @@ import { SunburstPattern } from './SunburstPattern';
 
 interface FramePreviewProps {
   state: {
-    image: File;
-    frame: string;
+    image: File | null;
+    frame: 'none' | 'macOS Light' | 'macOS Dark' | 'Windows' | 'Browser';
     size: number;
     roundness: number;
     shadow: number;
     rotate: number;
     tilt: number;
     background: {
-      type: string;
+      type: 'none' | 'solid' | 'gradient';
       color?: string;
       gradient?: string;
       showSunburst?: boolean;
