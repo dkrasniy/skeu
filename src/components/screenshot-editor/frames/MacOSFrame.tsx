@@ -22,7 +22,7 @@ export function MacOSFrame({ imageUrl, size, roundness, shadow, style, variant =
         borderRadius: `${roundness}px`,
       }}
     >
-      <div className={`h-7 flex items-center gap-1.5 px-3 ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
+      <div className={`h-8 flex items-center gap-1.5 px-3 ${isDark ? 'bg-zinc-900' : 'bg-white'} border-b`}>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-[#FF5F57]" />
           <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
