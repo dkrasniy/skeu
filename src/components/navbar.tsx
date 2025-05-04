@@ -15,20 +15,10 @@ const links = [
   { href: '/auth/login', label: 'Login' },
 ]
 
-function DesktopNav({ user }: { user?: any }) {
+function DesktopNav() {
   return (
     <nav className="relative hidden lg:flex">
-     
-      {user &&  <div  className="relative flex">
-          <Link
-            href={"#"}
-            className="flex items-center px-4 py-3 text-base font-medium text-gray-950 bg-blend-multiply data-hover:bg-black/[2.5%]"
-          >
-            {user.email}
-          </Link>
-        </div>}
-
-      {!user && links.map(({ href, label }) => (
+      {links.map(({ href, label }) => (
         <PlusGridItem key={href} className="relative flex">
           <Link
             href={href}
@@ -42,7 +32,7 @@ function DesktopNav({ user }: { user?: any }) {
   )
 }
 
-function MobileNavButton({ user }: { user?: any }) {
+function MobileNavButton() {
   return (
     <DisclosureButton
       className="flex size-12 items-center justify-center self-center rounded-lg data-hover:bg-black/5 lg:hidden"
@@ -82,11 +72,9 @@ function MobileNav() {
   )
 }
 
-export function Navbar({ banner, user }: { banner?: React.ReactNode, user?: any }) {
-  //get supabase user
+export function Navbar({ banner }: { banner?: React.ReactNode }) {
   return (
     <Disclosure as="header" className="pt-12 sm:pt-16">
-      
       <PlusGrid>
         <PlusGridRow className="relative flex justify-between">
           <div className="relative flex gap-6">
@@ -101,8 +89,8 @@ export function Navbar({ banner, user }: { banner?: React.ReactNode, user?: any 
               </div>
             )}
           </div>
-          <DesktopNav user={user} />
-          <MobileNavButton user={user} />
+          <DesktopNav />
+          <MobileNavButton />
         </PlusGridRow>
       </PlusGrid>
       <MobileNav />
