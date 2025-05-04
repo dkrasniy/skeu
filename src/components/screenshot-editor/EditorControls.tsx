@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { EditorState } from './types';
+import { CustomSlider } from '@/components/ui/custom-slider';
 import {
   WindowIcon,
   ArrowsPointingOutIcon,
@@ -19,6 +20,7 @@ import {
   SwatchIcon,
   ArrowsRightLeftIcon,
 } from '@heroicons/react/24/outline';
+import { GradientPreview } from './GradientPreview';
 
 interface EditorControlsProps {
   state: EditorState;
@@ -30,6 +32,57 @@ const GRID_POSITIONS = [
   { x: -100, y: -100 }, { x: 0, y: -100 }, { x: 100, y: -100 },
   { x: -100, y: 0 }, { x: 0, y: 0 }, { x: 100, y: 0 },
   { x: -100, y: 100 }, { x: 0, y: 100 }, { x: 100, y: 100 },
+];
+
+const GRADIENTS = [
+  {
+    value: 'linear-gradient(45deg, #f3ec78, #af4261)',
+    label: 'Sunset',
+  },
+  {
+    value: 'linear-gradient(45deg, #00c6fb, #005bea)',
+    label: 'Ocean',
+  },
+  {
+    value: 'linear-gradient(45deg, #84fab0, #8fd3f4)',
+    label: 'Mint',
+  },
+  {
+    value: 'linear-gradient(45deg, #a18cd1, #fbc2eb)',
+    label: 'Lavender',
+  },
+  {
+    value: 'linear-gradient(45deg, #fad0c4, #ff9a9e)',
+    label: 'Peach',
+  },
+  {
+    value: 'linear-gradient(45deg, #ffecd2, #fcb69f)',
+    label: 'Warm Flame',
+  },
+  {
+    value: 'linear-gradient(45deg, #ff9a9e, #fecfef)',
+    label: 'Lady Lips',
+  },
+  {
+    value: 'linear-gradient(45deg, #a8edea, #fed6e3)',
+    label: 'Cotton Candy',
+  },
+  {
+    value: 'linear-gradient(45deg, #5ee7df, #b490ca)',
+    label: 'Magic Lake',
+  },
+  {
+    value: 'linear-gradient(45deg, #d299c2, #fef9d7)',
+    label: 'Young Passion',
+  },
+  {
+    value: 'linear-gradient(45deg, #667eea, #764ba2)',
+    label: 'Deep Blue',
+  },
+  {
+    value: 'linear-gradient(45deg, #89f7fe, #66a6ff)',
+    label: 'Aqua Splash',
+  },
 ];
 
 export function EditorControls({ state, onChange }: EditorControlsProps) {
@@ -77,56 +130,61 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
 
             <div className="space-y-2">
               <ControlLabel icon={ArrowsPointingOutIcon}>Size</ControlLabel>
-              <Slider
-                value={[state.size]}
-                onValueChange={([value]) => onChange({ size: value })}
+              <CustomSlider
+                value={state.size}
+                onChange={(value) => onChange({ size: value })}
                 min={50}
                 max={150}
                 step={1}
+                unit="%"
               />
             </div>
 
             <div className="space-y-2">
               <ControlLabel icon={Square2StackIcon}>Roundness</ControlLabel>
-              <Slider
-                value={[state.roundness]}
-                onValueChange={([value]) => onChange({ roundness: value })}
+              <CustomSlider
+                value={state.roundness}
+                onChange={(value) => onChange({ roundness: value })}
                 min={0}
                 max={20}
                 step={1}
+                unit="px"
               />
             </div>
 
             <div className="space-y-2">
               <ControlLabel icon={CubeTransparentIcon}>Shadow</ControlLabel>
-              <Slider
-                value={[state.shadow]}
-                onValueChange={([value]) => onChange({ shadow: value })}
+              <CustomSlider
+                value={state.shadow}
+                onChange={(value) => onChange({ shadow: value })}
                 min={0}
                 max={40}
                 step={1}
+                unit="px"
               />
             </div>
 
             <div className="space-y-2">
               <ControlLabel icon={ArrowPathIcon}>Rotate</ControlLabel>
-              <Slider
-                value={[state.rotate]}
-                onValueChange={([value]) => onChange({ rotate: value })}
+              <CustomSlider
+                value={state.rotate}
+                onChange={(value) => onChange({ rotate: value })}
                 min={-180}
                 max={180}
                 step={1}
+                unit="°"
               />
             </div>
 
             <div className="space-y-2">
               <ControlLabel icon={ArrowsUpDownIcon}>Tilt</ControlLabel>
-              <Slider
-                value={[state.tilt]}
-                onValueChange={([value]) => onChange({ tilt: value })}
+              <CustomSlider
+                value={state.tilt}
+                onChange={(value) => onChange({ tilt: value })}
                 min={-45}
                 max={45}
                 step={1}
+                unit="°"
               />
             </div>
 
@@ -153,28 +211,26 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
               {/* X Position Slider */}
               <div className="space-y-2">
                 <Label className="text-sm">X Position</Label>
-                <Slider
-                  value={[state.position.x]}
-                  onValueChange={([x]) =>
-                    onChange({ position: { ...state.position, x } })
-                  }
+                <CustomSlider
+                  value={state.position.x}
+                  onChange={(x) => onChange({ position: { ...state.position, x } })}
                   min={-100}
                   max={100}
                   step={1}
+                  unit="px"
                 />
               </div>
 
               {/* Y Position Slider */}
               <div className="space-y-2">
                 <Label className="text-sm">Y Position</Label>
-                <Slider
-                  value={[state.position.y]}
-                  onValueChange={([y]) =>
-                    onChange({ position: { ...state.position, y } })
-                  }
+                <CustomSlider
+                  value={state.position.y}
+                  onChange={(y) => onChange({ position: { ...state.position, y } })}
                   min={-100}
                   max={100}
                   step={1}
+                  unit="px"
                 />
               </div>
             </div>
@@ -239,18 +295,26 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select gradient" />
+                  <SelectValue>
+                    {state.background.gradient ? (
+                      <GradientPreview 
+                        gradient={state.background.gradient}
+                        label={GRADIENTS.find(g => g.value === state.background.gradient)?.label || 'Custom'}
+                      />
+                    ) : (
+                      'Select gradient'
+                    )}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="linear-gradient(45deg, #f3ec78, #af4261)">
-                    Sunset
-                  </SelectItem>
-                  <SelectItem value="linear-gradient(45deg, #00c6fb, #005bea)">
-                    Ocean
-                  </SelectItem>
-                  <SelectItem value="linear-gradient(45deg, #84fab0, #8fd3f4)">
-                    Mint
-                  </SelectItem>
+                  {GRADIENTS.map((gradient) => (
+                    <SelectItem key={gradient.value} value={gradient.value}>
+                      <GradientPreview 
+                        gradient={gradient.value}
+                        label={gradient.label}
+                      />
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <div className="flex items-center justify-between">

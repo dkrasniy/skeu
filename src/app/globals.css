@@ -124,3 +124,47 @@
 html, body {
   @apply font-sans;
 }
+
+/* Custom Slider Styles */
+.slider-root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  user-select: none;
+  touch-action: none;
+  height: 20px;
+}
+
+.slider-track {
+  position: relative;
+  flex-grow: 1;
+  height: 6px;
+  background-color: hsl(var(--input));
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.slider-range {
+  position: absolute;
+  height: 100%;
+  background-color: hsl(var(--primary));
+}
+
+.slider-thumb {
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-color: hsl(var(--primary));
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 9999px;
+  transition: transform 0.2s;
+}
+
+.slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.slider-thumb:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.2);
+}

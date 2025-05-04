@@ -29,7 +29,10 @@ export function FramePreview({ state }: FramePreviewProps) {
       size: state.size,
       roundness: state.roundness,
       shadow: state.shadow,
-      
+      style: {
+        overflow: 'hidden',
+        borderRadius: `${state.roundness}px`,
+      }
     };
 
     switch (state.frame) {
@@ -44,7 +47,8 @@ export function FramePreview({ state }: FramePreviewProps) {
       default:
         return (
           <div
-            className="relative rounded-lg overflow-hidden"
+            className="relative overflow-hidden"
+            style={{ borderRadius: `${state.roundness}px` }}
           >
             <img
               src={imageUrl}

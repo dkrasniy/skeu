@@ -16,8 +16,11 @@ export function MacOSFrame({ imageUrl, size, roundness, shadow, style, variant =
 
   return (
     <div 
-      className={`overflow-hidden rounded-lg ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}
-      style={style}
+      className={`overflow-hidden ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}
+      style={{
+        ...style,
+        borderRadius: `${roundness}px`,
+      }}
     >
       <div className={`h-7 flex items-center gap-1.5 px-3 ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
         <div className="flex items-center gap-1.5">
@@ -31,7 +34,6 @@ export function MacOSFrame({ imageUrl, size, roundness, shadow, style, variant =
           src={imageUrl}
           alt="Preview"
           className="w-full h-full object-contain"
-       
         />
       </div>
     </div>

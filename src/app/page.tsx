@@ -21,8 +21,8 @@ export default async function Home() {
     <SidebarProvider>
       {/* <AppSidebar />
       <SidebarInset> */} 
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0 font-sans">
-         welcome to skeu.app
+        <div className="flex flex-1 flex-col gap-4   font-sans">
+        
           <ScreenshotEditor />
         </div>
       {/* </SidebarInset> */}

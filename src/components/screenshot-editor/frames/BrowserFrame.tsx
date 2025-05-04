@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react';
-import { Circle } from 'lucide-react';
 
 interface BrowserFrameProps {
   imageUrl: string;
@@ -14,18 +13,21 @@ interface BrowserFrameProps {
 export function BrowserFrame({ imageUrl, size, roundness, shadow, style }: BrowserFrameProps) {
   return (
     <div 
-      className="overflow-hidden rounded-lg bg-white border border-gray-200"
-      style={style}
+      className="overflow-hidden bg-white"
+      style={{
+        ...style,
+        borderRadius: `${roundness}px`,
+      }}
     >
-      <div className="h-10 flex items-center gap-2 px-4 bg-gray-100 border-b border-gray-200">
+      <div className="h-10 flex items-center gap-2 px-3 bg-[#f1f3f4] border-b border-gray-200">
         <div className="flex items-center gap-1.5">
-          <Circle className="w-2.5 h-2.5 fill-red-500 text-red-500" />
-          <Circle className="w-2.5 h-2.5 fill-yellow-500 text-yellow-500" />
-          <Circle className="w-2.5 h-2.5 fill-green-500 text-green-500" />
+          <div className="w-3 h-3 rounded-full bg-[#FF5F57]" />
+          <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
+          <div className="w-3 h-3 rounded-full bg-[#28C840]" />
         </div>
-        <div className="flex-1 mx-4">
-          <div className="w-full h-6 px-3 bg-white rounded flex items-center text-sm text-gray-500">
-            
+        <div className="flex-1 mx-2">
+          <div className="h-6 bg-white rounded-md px-3 text-sm flex items-center text-gray-600">
+            example.com
           </div>
         </div>
       </div>
@@ -34,7 +36,6 @@ export function BrowserFrame({ imageUrl, size, roundness, shadow, style }: Brows
           src={imageUrl}
           alt="Preview"
           className="w-full h-full object-contain"
-        
         />
       </div>
     </div>

@@ -15,7 +15,7 @@ export function ScreenshotEditor() {
     roundness: 8,
     shadow: 10,
     rotate: 0,
-    tilt: 0,
+    tilt: 5,
     background: {
       type: 'gradient',
       gradient: 'linear-gradient(45deg, #f3ec78, #af4261)',
@@ -72,13 +72,13 @@ export function ScreenshotEditor() {
 
   return (
     <div 
-      className="flex flex-col gap-6 p-6 bg-background rounded-lg border relative"
+      className="flex flex-col gap-6 p-6 rounded-xl border relative"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       {isDraggingOver && (
-        <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-lg border-2 border-dashed border-primary">
+        <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-lg flex items-center justify-center rounded-lg border-2 border-dashed border-neutral-100">
           <div className="text-center">
             <p className="text-lg font-medium">
               {editorState.image ? 'Drop to replace image' : 'Drop to add image'}
@@ -89,7 +89,7 @@ export function ScreenshotEditor() {
       )}
       <div className="flex gap-6">
         {/* Preview Area */}
-        <div className="relative mt-2 lg:mb-5 lg:mx-0 overflow-hidden w-full flex-1 flex flex-col items-stretch max-h-[90vh] h-full relative">
+        <div className="relative mt-2 lg:mb-5 lg:mx-0 overflow-hidden rounded-xl w-full flex-1 flex flex-col items-stretch max-h-[90vh] h-full relative">
           <div className="relative h-full">
             <div className="absolute inset-0 pointer-events-none">
               {editorState.background.showSunburst && (
