@@ -4,12 +4,19 @@ import React from 'react';
 import { X, Minus, Square } from 'lucide-react';
 
 interface WindowsFrameProps {
-  children: React.ReactNode;
+  imageUrl: string;
+  size: number;
+  roundness: number;
+  shadow: number;
+  style?: React.CSSProperties;
 }
 
-export function WindowsFrame({ children }: WindowsFrameProps) {
+export function WindowsFrame({ imageUrl, size, roundness, shadow, style }: WindowsFrameProps) {
   return (
-    <div className="overflow-hidden rounded-lg bg-white border border-gray-200">
+    <div 
+      className="overflow-hidden rounded-lg bg-white border border-gray-200"
+      style={style}
+    >
       <div className="h-8 flex items-center justify-between px-3 bg-white border-b border-gray-200">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3" />
@@ -27,7 +34,12 @@ export function WindowsFrame({ children }: WindowsFrameProps) {
         </div>
       </div>
       <div className="relative">
-        {children}
+        <img
+          src={imageUrl}
+          alt="Preview"
+          className="w-full h-full object-contain"
+        
+        />
       </div>
     </div>
   );

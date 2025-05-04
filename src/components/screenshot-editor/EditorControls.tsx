@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 
 interface EditorControlsProps {
   state: {
@@ -19,12 +21,35 @@ interface EditorControlsProps {
       type: string;
       color?: string;
       gradient?: string;
+      showSunburst?: boolean;
+    };
+    position: {
+      x: number;
+      y: number;
     };
   };
   onChange: (updates: Partial<typeof state>) => void;
 }
 
+// Grid positions for the 3x3 preset grid
+const GRID_POSITIONS = [
+  { x: -100, y: -100 }, { x: 0, y: -100 }, { x: 100, y: -100 },
+  { x: -100, y: 0 }, { x: 0, y: 0 }, { x: 100, y: 0 },
+  { x: -100, y: 100 }, { x: 0, y: 100 }, { x: 100, y: 100 },
+];
+
 export function EditorControls({ state, onChange }: EditorControlsProps) {
+  const handleBackgroundTypeChange = (type: string) => {
+    const newBackground = {
+      ...state.background,
+      type,
+      // Keep existing color/gradient if available, or set defaults
+      color: type === 'solid' ? (state.background.color || '#ffffff') : undefined,
+      gradient: type === 'gradient' ? (state.background.gradient || 'linear-gradient(45deg, #f3ec78, #af4261)') : undefined,
+    };
+    onChange({ background: newBackground });
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -103,6 +128,55 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
                 step={1}
               />
             </div>
+
+            {/* Position Controls */}
+            <div className="space-y-4">
+              <Label>Position</Label>
+              
+              {/* 3x3 Grid Presets */}
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                {GRID_POSITIONS.map((pos, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    className={`aspect-square ${
+                      state.position.x === pos.x && state.position.y === pos.y
+                        ? 'bg-primary/20'
+                        : ''
+                    }`}
+                    onClick={() => onChange({ position: pos })}
+                  />
+                ))}
+              </div>
+
+              {/* X Position Slider */}
+              <div className="space-y-2">
+                <Label className="text-sm">X Position</Label>
+                <Slider
+                  value={[state.position.x]}
+                  onValueChange={([x]) =>
+                    onChange({ position: { ...state.position, x } })
+                  }
+                  min={-100}
+                  max={100}
+                  step={1}
+                />
+              </div>
+
+              {/* Y Position Slider */}
+              <div className="space-y-2">
+                <Label className="text-sm">Y Position</Label>
+                <Slider
+                  value={[state.position.y]}
+                  onValueChange={([y]) =>
+                    onChange({ position: { ...state.position, y } })
+                  }
+                  min={-100}
+                  max={100}
+                  step={1}
+                />
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -110,30 +184,56 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
       <Card>
         <CardContent className="pt-6">
           <Label>Background</Label>
-          <Tabs defaultValue={state.background.type} className="mt-2">
+          <Tabs 
+            defaultValue={state.background.type} 
+            className="mt-2"
+            onValueChange={handleBackgroundTypeChange}
+          >
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="none">None</TabsTrigger>
               <TabsTrigger value="solid">Solid</TabsTrigger>
               <TabsTrigger value="gradient">Gradient</TabsTrigger>
             </TabsList>
-            <TabsContent value="solid" className="mt-4">
+            <TabsContent value="solid" className="mt-4 space-y-4">
               <input
                 type="color"
                 value={state.background.color || '#ffffff'}
                 onChange={(e) =>
                   onChange({
-                    background: { type: 'solid', color: e.target.value },
+                    background: { 
+                      ...state.background,
+                      type: 'solid', 
+                      color: e.target.value 
+                    },
                   })
                 }
                 className="w-full h-10 rounded cursor-pointer"
               />
+              <div className="flex items-center justify-between">
+                <Label>Sunburst Pattern</Label>
+                <Switch
+                  checked={state.background.showSunburst}
+                  onCheckedChange={(checked) =>
+                    onChange({
+                      background: {
+                        ...state.background,
+                        showSunburst: checked,
+                      },
+                    })
+                  }
+                />
+              </div>
             </TabsContent>
-            <TabsContent value="gradient" className="mt-4">
+            <TabsContent value="gradient" className="mt-4 space-y-4">
               <Select
                 value={state.background.gradient}
                 onValueChange={(value) =>
                   onChange({
-                    background: { type: 'gradient', gradient: value },
+                    background: { 
+                      ...state.background,
+                      type: 'gradient', 
+                      gradient: value 
+                    },
                   })
                 }
               >
@@ -152,6 +252,20 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
                   </SelectItem>
                 </SelectContent>
               </Select>
+              <div className="flex items-center justify-between">
+                <Label>Sunburst Pattern</Label>
+                <Switch
+                  checked={state.background.showSunburst}
+                  onCheckedChange={(checked) =>
+                    onChange({
+                      background: {
+                        ...state.background,
+                        showSunburst: checked,
+                      },
+                    })
+                  }
+                />
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>

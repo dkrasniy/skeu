@@ -3,15 +3,22 @@
 import React from 'react';
 
 interface MacOSFrameProps {
-  children: React.ReactNode;
   variant?: 'light' | 'dark';
+  imageUrl: string;
+  size: number;
+  roundness: number;
+  shadow: number;
+  style?: React.CSSProperties;
 }
 
-export function MacOSFrame({ children, variant = 'light' }: MacOSFrameProps) {
+export function MacOSFrame({ imageUrl, size, roundness, shadow, style, variant = 'light' }: MacOSFrameProps) {
   const isDark = variant === 'dark';
 
   return (
-    <div className={`overflow-hidden rounded-lg ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
+    <div 
+      className={`overflow-hidden rounded-lg ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}
+      style={style}
+    >
       <div className={`h-7 flex items-center gap-1.5 px-3 ${isDark ? 'bg-zinc-900' : 'bg-white'}`}>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-[#FF5F57]" />
@@ -20,7 +27,12 @@ export function MacOSFrame({ children, variant = 'light' }: MacOSFrameProps) {
         </div>
       </div>
       <div className="relative">
-        {children}
+        <img
+          src={imageUrl}
+          alt="Preview"
+          className="w-full h-full object-contain"
+       
+        />
       </div>
     </div>
   );
