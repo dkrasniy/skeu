@@ -67,7 +67,7 @@ export function ScreenshotEditor() {
     <div className="flex flex-col gap-6 p-6 bg-background rounded-lg border">
       <div className="flex gap-6">
         {/* Preview Area */}
-        <div className="flex-1 min-h-[600px] max-h-[80vh] bg-muted rounded-lg relative">
+        <div className="relative mt-2 lg:mb-5 lg:mx-0 overflow-hidden w-full flex-1 flex flex-col items-stretch max-h-[90vh] h-full relative">
           <div className="relative h-full">
             <div className="absolute inset-0 pointer-events-none">
               {editorState.background.showSunburst && (
