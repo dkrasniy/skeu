@@ -80,25 +80,26 @@ export function ScreenshotEditor({
 
   return (
     <div 
-      className="flex flex-col gap-6 p-6 rounded-xl border relative"
+      className="flex flex-col gap-8 p-8 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 min-h-screen relative"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
       {isDraggingOver && (
-        <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-lg flex items-center justify-center rounded-lg border-2 border-dashed border-neutral-100">
-          <div className="text-center">
-            <p className="text-lg font-medium">
+        <div className="absolute inset-0 z-50 bg-background/90 backdrop-blur-lg flex items-center justify-center rounded-2xl border-2 border-dashed border-blue-300 dark:border-blue-600">
+          <div className="text-center space-y-2">
+            <p className="text-xl font-semibold text-blue-600 dark:text-blue-400">
               {editorState.image ? 'Drop to replace image' : 'Drop to add image'}
             </p>
             <p className="text-sm text-muted-foreground">PNG, JPG, GIF up to 10MB</p>
           </div>
         </div>
       )}
-      <div className="flex gap-6">
+      
+      <div className="flex gap-8 max-w-7xl mx-auto w-full">
         {/* Preview Area */}
-        <div className="relative lg:mb-2 lg:mx-0 overflow-hidden rounded-xl w-full flex-1 flex flex-col items-stretch max-h-[90vh] h-full relative">
-          <div className="relative h-full">
+        <div className="flex-1 min-h-[600px]">
+          <div className="relative h-full rounded-2xl overflow-hidden bg-white dark:bg-gray-800 shadow-xl border border-gray-200 dark:border-gray-700">
             <div className="absolute inset-0 pointer-events-none">
               {editorState.background.showSunburst && (
                 <SunburstPattern 
@@ -115,24 +116,42 @@ export function ScreenshotEditor({
         </div>
 
         {/* Controls Sidebar */}
-        <div className="w-80 flex flex-col gap-4">
+        <div className="w-80 space-y-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+            <EditorControls 
+              state={editorState}
+              onChange={updateEditorState}
+            />
+          </div>
           
-         
-          <EditorControls 
-            state={editorState}
-            onChange={updateEditorState}
-          />
-          <ExportOptions state={editorState} />
-          {userData ? <Card>
-            {userData?.email}
-            <Button
-            onClick={() => {
-              // Logout functionality temporarily disabled
-            }}
-            >Logout</Button>
-          </Card>: <Card>
-            <Button asChild><Link href="/auth/login">Login</Link></Button>
-          </Card> }
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+            <ExportOptions state={editorState} />
+          </div>
+          
+          {userData ? (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+              <div className="text-sm text-muted-foreground mb-3">Signed in as</div>
+              <div className="font-medium mb-4">{userData?.email}</div>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  // Logout functionality temporarily disabled
+                }}
+              >
+                Logout
+              </Button>
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+              <div className="text-center space-y-4">
+                <p className="text-sm text-muted-foreground">Sign in to save your work</p>
+                <Button asChild className="w-full">
+                  <Link href="/auth/login">Login</Link>
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

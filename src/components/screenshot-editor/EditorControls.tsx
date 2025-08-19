@@ -4,7 +4,6 @@ import React from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -105,50 +104,50 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
   );
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardContent className="pt-0">
-          <ControlLabel icon={SwatchIcon}>Background</ControlLabel>
-          <Tabs 
-            defaultValue={state.background.type} 
-            className="mt-2"
-            onValueChange={(value: string) => handleBackgroundTypeChange(value as 'none' | 'solid' | 'gradient')}
-          >
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="none">None</TabsTrigger>
-              <TabsTrigger value="solid">Solid</TabsTrigger>
-              <TabsTrigger value="gradient">Gradient</TabsTrigger>
-            </TabsList>
-            <TabsContent value="solid" className="mt-4 space-y-4">
-              <input
-                type="color"
-                value={state.background.color || '#ffffff'}
-                onChange={(e) =>
+    <div className="space-y-6">
+      {/* Background Controls */}
+      <div className="space-y-3">
+        <ControlLabel icon={SwatchIcon}>Background</ControlLabel>
+        <Tabs 
+          defaultValue={state.background.type} 
+          className="w-full"
+          onValueChange={(value: string) => handleBackgroundTypeChange(value as 'none' | 'solid' | 'gradient')}
+        >
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="none">None</TabsTrigger>
+            <TabsTrigger value="solid">Solid</TabsTrigger>
+            <TabsTrigger value="gradient">Gradient</TabsTrigger>
+          </TabsList>
+          <TabsContent value="solid" className="mt-4 space-y-4">
+            <input
+              type="color"
+              value={state.background.color || '#ffffff'}
+              onChange={(e) =>
+                onChange({
+                  background: { 
+                    ...state.background,
+                    type: 'solid', 
+                    color: e.target.value 
+                  },
+                })
+              }
+              className="w-full h-12 rounded-lg cursor-pointer border border-gray-300 dark:border-gray-600"
+            />
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Sunburst Pattern</Label>
+              <Switch
+                checked={state.background.showSunburst}
+                onCheckedChange={(checked) =>
                   onChange({
-                    background: { 
+                    background: {
                       ...state.background,
-                      type: 'solid', 
-                      color: e.target.value 
+                      showSunburst: checked,
                     },
                   })
                 }
-                className="w-full h-10 rounded cursor-pointer"
               />
-              <div className="flex items-center justify-between">
-                <Label>Sunburst Pattern</Label>
-                <Switch
-                  checked={state.background.showSunburst}
-                  onCheckedChange={(checked) =>
-                    onChange({
-                      background: {
-                        ...state.background,
-                        showSunburst: checked,
-                      },
-                    })
-                  }
-                />
-              </div>
-            </TabsContent>
+            </div>
+          </TabsContent>
             <TabsContent value="gradient" className="mt-4 space-y-4">
               <Select
                 value={state.background.gradient}
@@ -186,7 +185,7 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
                 </SelectContent>
               </Select>
               <div className="flex items-center justify-between">
-                <Label>Sunburst Pattern</Label>
+                <Label className="text-sm font-medium">Sunburst Pattern</Label>
                 <Switch
                   checked={state.background.showSunburst}
                   onCheckedChange={(checked) =>
@@ -201,141 +200,141 @@ export function EditorControls({ state, onChange }: EditorControlsProps) {
               </div>
             </TabsContent>
           </Tabs>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="pt-0">
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <ControlLabel icon={WindowIcon}>Frame</ControlLabel>
-              <Select
-                value={state.frame}
-                onValueChange={(value: typeof state.frame) => onChange({ frame: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select frame style" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No Frame</SelectItem>
-                  <SelectItem value="macOS Light">macOS Light</SelectItem>
-                  <SelectItem value="macOS Dark">macOS Dark</SelectItem>
-                  <SelectItem value="Windows">Windows</SelectItem>
-                  <SelectItem value="Browser">Browser</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        </div>
 
-            <div className="space-y-1">
-              <ControlLabel icon={ArrowsPointingOutIcon}>Size</ControlLabel>
-              <CustomSlider
-                value={state.size}
-                onChange={(value) => onChange({ size: value })}
-                min={50}
-                max={150}
-                step={1}
-                unit="%"
-              />
-            </div>
+        {/* Frame Controls */}
+        <div className="space-y-3">
+          <ControlLabel icon={WindowIcon}>Frame</ControlLabel>
+          <Select
+            value={state.frame}
+            onValueChange={(value: typeof state.frame) => onChange({ frame: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select frame style" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No Frame</SelectItem>
+              <SelectItem value="macOS Light">macOS Light</SelectItem>
+              <SelectItem value="macOS Dark">macOS Dark</SelectItem>
+              <SelectItem value="Windows">Windows</SelectItem>
+              <SelectItem value="Browser">Browser</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-            <div className="space-y-1">
-              <ControlLabel icon={Square2StackIcon}>Roundness</ControlLabel>
-              <CustomSlider
-                value={state.roundness}
-                onChange={(value) => onChange({ roundness: value })}
-                min={0}
-                max={20}
-                step={1}
-                unit="px"
-              />
-            </div>
+        {/* Size Controls */}
+        <div className="space-y-3">
+          <ControlLabel icon={ArrowsPointingOutIcon}>Size</ControlLabel>
+          <CustomSlider
+            value={state.size}
+            onChange={(value) => onChange({ size: value })}
+            min={50}
+            max={150}
+            step={1}
+            unit="%"
+          />
+        </div>
 
-            <div className="space-y-1">
-              <ControlLabel icon={CubeTransparentIcon}>Shadow</ControlLabel>
-              <CustomSlider
-                value={state.shadow}
-                onChange={(value) => onChange({ shadow: value })}
-                min={0}
-                max={40}
-                step={1}
-                unit="px"
-              />
-            </div>
+        {/* Roundness Controls */}
+        <div className="space-y-3">
+          <ControlLabel icon={Square2StackIcon}>Roundness</ControlLabel>
+          <CustomSlider
+            value={state.roundness}
+            onChange={(value) => onChange({ roundness: value })}
+            min={0}
+            max={20}
+            step={1}
+            unit="px"
+          />
+        </div>
 
-            <div className="space-y-1">
-              <ControlLabel icon={ArrowPathIcon}>Rotate</ControlLabel>
-              <CustomSlider
-                value={state.rotate}
-                onChange={(value) => onChange({ rotate: value })}
-                min={-180}
-                max={180}
-                step={1}
-                unit="°"
-              />
-            </div>
+        {/* Shadow Controls */}
+        <div className="space-y-3">
+          <ControlLabel icon={CubeTransparentIcon}>Shadow</ControlLabel>
+          <CustomSlider
+            value={state.shadow}
+            onChange={(value) => onChange({ shadow: value })}
+            min={0}
+            max={40}
+            step={1}
+            unit="px"
+          />
+        </div>
 
-            <div className="space-y-1">
-              <ControlLabel icon={ArrowsUpDownIcon}>Tilt</ControlLabel>
-              <CustomSlider
-                value={state.tilt}
-                onChange={(value) => onChange({ tilt: value })}
-                min={-45}
-                max={45}
-                step={1}
-                unit="°"
-              />
-            </div>
+        {/* Rotate Controls */}
+        <div className="space-y-3">
+          <ControlLabel icon={ArrowPathIcon}>Rotate</ControlLabel>
+          <CustomSlider
+            value={state.rotate}
+            onChange={(value) => onChange({ rotate: value })}
+            min={-180}
+            max={180}
+            step={1}
+            unit="°"
+          />
+        </div>
 
-            {/* Position Controls */}
-            <div className="space-y-4">
-              <ControlLabel icon={ArrowsRightLeftIcon}>Position</ControlLabel>
-              
-              {/* 3x3 Grid Presets */}
-              <div className=" w-1/3 grid grid-cols-3 gap-2 mb-4">
-                {GRID_POSITIONS.map((pos, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    className={`aspect-square !h-5 !w-5 !p-0 rounded-sm ${
-                      state.position.x === pos.x && state.position.y === pos.y
-                        ? 'bg-primary/20'
-                        : ''
-                    }`}
-                    onClick={() => onChange({ position: pos })}
-                  />
-                ))}
-              </div>
+        {/* Tilt Controls */}
+        <div className="space-y-3">
+          <ControlLabel icon={ArrowsUpDownIcon}>Tilt</ControlLabel>
+          <CustomSlider
+            value={state.tilt}
+            onChange={(value) => onChange({ tilt: value })}
+            min={-45}
+            max={45}
+            step={1}
+            unit="°"
+          />
+        </div>
 
-              {/* X Position Slider */}
-              <div className="space-y-1">
-                <Label className="text-sm">X Position</Label>
-                <CustomSlider
-                  value={state.position.x}
-                  onChange={(x) => onChange({ position: { ...state.position, x } })}
-                  min={-100}
-                  max={100}
-                  step={1}
-                  unit="px"
+        {/* Position Controls */}
+        <div className="space-y-3">
+          <ControlLabel icon={ArrowsRightLeftIcon}>Position</ControlLabel>
+          
+          {/* 3x3 Grid Presets */}
+          <div className="flex justify-center">
+            <div className="grid grid-cols-3 gap-1">
+              {GRID_POSITIONS.map((pos, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  className={`h-8 w-8 p-0 rounded-md transition-colors ${
+                    state.position.x === pos.x && state.position.y === pos.y
+                      ? 'bg-blue-100 border-blue-300 dark:bg-blue-900/30 dark:border-blue-600'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                  onClick={() => onChange({ position: pos })}
                 />
-              </div>
-
-              {/* Y Position Slider */}
-              <div className="space-y-1">
-                <Label className="text-sm">Y Position</Label>
-                <CustomSlider
-                  value={state.position.y}
-                  onChange={(y) => onChange({ position: { ...state.position, y } })}
-                  min={-100}
-                  max={100}
-                  step={1}
-                  unit="px"
-                />
-              </div>
+              ))}
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      
+          {/* X Position Slider */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">X Position</Label>
+            <CustomSlider
+              value={state.position.x}
+              onChange={(x) => onChange({ position: { ...state.position, x } })}
+              min={-100}
+              max={100}
+              step={1}
+              unit="px"
+            />
+          </div>
+
+          {/* Y Position Slider */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Y Position</Label>
+            <CustomSlider
+              value={state.position.y}
+              onChange={(y) => onChange({ position: { ...state.position, y } })}
+              min={-100}
+              max={100}
+              step={1}
+              unit="px"
+            />
+          </div>
+        </div>
     </div>
   );
 } 
