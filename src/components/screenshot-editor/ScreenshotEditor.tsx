@@ -1,4 +1,5 @@
 'use client'
+
 import React, { useState, useCallback, DragEvent } from 'react';
 import { ImageDropzone } from './ImageDropzone';
 import { EditorControls } from './EditorControls';
@@ -8,7 +9,6 @@ import { SunburstPattern } from './SunburstPattern';
 import { EditorState } from './types';
 import { Card } from '../ui/card';
 import { Button } from '../ui/button';
-import { createClient } from '@/utils/supabase/client';
 import Link from 'next/link';
 
 export function ScreenshotEditor({
@@ -127,9 +127,7 @@ export function ScreenshotEditor({
             {userData?.email}
             <Button
             onClick={() => {
-              const supabase = createClient()
-              supabase.auth.signOut()
-               
+              // Logout functionality temporarily disabled
             }}
             >Logout</Button>
           </Card>: <Card>
