@@ -5,9 +5,16 @@ import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
+const description = "Make beautiful screenshots in your browser. Add a window frame, shadow, 3D tilt and background, then download a PNG. Free, no signup, nothing uploaded.";
+
 export const metadata: Metadata = {
-  title: "Skeu",
-  description: "Make beautiful screenshots.",
+  metadataBase: new URL("https://skeu.app"),
+  title: "Skeu: free screenshot editor",
+  description,
+  applicationName: "Skeu",
+  alternates: { canonical: "/" },
+  openGraph: { type: "website", siteName: "Skeu", url: "/", title: "Skeu: free screenshot editor", description },
+  twitter: { card: "summary_large_image", title: "Skeu: free screenshot editor", description },
 };
 
 // viewport-fit=cover lets the mobile download bar pad itself clear of the iPhone home indicator.

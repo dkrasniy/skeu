@@ -18,7 +18,7 @@ npm install
 npm run dev
 ```
 
-Then open [localhost:3000](http://localhost:3000). It's a Next.js app with no backend and nothing to configure.
+Then open [localhost:3000/editor](http://localhost:3000/editor). It's a Next.js app with no backend and nothing to configure.
 
 ## What it does
 

@@ -7,6 +7,7 @@ import { CropEditor } from "./crop";
 import { ColorChip, Icon, IconButton, Menu, PositionGrid, ResizeHandle, Segmented, Slider, SliderRow, TiltPad } from "./controls";
 import { type Asset, type Settings, anchorOffsets, canvasDimensions, clamp, DEFAULT_SETTINGS, GRADIENTS, INITIAL_DOCUMENT, RATIOS, SOLIDS } from "@/lib/editor-state";
 import { clearSavedDocument, loadStyle, saveStyle } from "@/lib/storage";
+import { HOME_HREF, rememberEditor } from "@/lib/returning";
 import { useHistory } from "@/lib/use-history";
 
 type ImageFormat = "png" | "jpeg" | "webp";
@@ -41,8 +42,9 @@ function confetti(count = 22): Particle[] {
   });
 }
 
+// Opens the home page in a new tab: the image lives only in this page, so leaving it would lose the work.
 function Logo() {
-  return <img className="logo" src="/logo.svg" alt="" width={24} height={24} />;
+  return <a className="logo" href={HOME_HREF} target="_blank" rel="noopener" aria-label="About Skeu"><img src="/logo.svg" alt="" width={24} height={24} /></a>;
 }
 
 export function Editor() {
@@ -90,6 +92,7 @@ export function Editor() {
   // Each visit starts with an empty canvas; only the style carries over.
   useEffect(() => {
     clearSavedDocument();
+    rememberEditor();
     const style = loadStyle();
     if (style) restore({ ...INITIAL_DOCUMENT, settings: style });
     return () => { clearTimeout(toastTimer.current); clearTimeout(copiedTimer.current); clearTimeout(burstTimer.current); clearTimeout(wheelTimer.current); };

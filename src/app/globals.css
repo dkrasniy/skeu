@@ -47,7 +47,8 @@
 .canvas-column { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
 .canvas-bar { position: relative; z-index: 5; overflow: visible; height: 56px; flex: none; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; padding: 0 10px 0 16px; }
 .doc-title { min-width: 0; overflow: hidden; display: flex; align-items: center; gap: 6px; }
-.logo { width: 24px; height: 24px; flex: none; margin-right: 2px; }
+.logo { width: 24px; height: 24px; flex: none; margin-right: 2px; display: block; border-radius: 6px; }
+.logo img { display: block; }
 .doc-name { min-width: 4ch; max-width: 260px; field-sizing: content; height: 30px; padding: 0 8px; border: 0; border-radius: var(--r-sm); background: transparent; font-size: var(--fs-14); font-weight: var(--fw-title); letter-spacing: var(--ls-15); text-overflow: ellipsis; outline: none; transition: background-color var(--hover); }
 .doc-name:hover, .doc-name:focus { background: var(--fill-subtle); }
 .bar-actions { flex: none; display: flex; align-items: center; gap: 2px; }

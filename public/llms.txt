@@ -1,0 +1,20 @@
+# Skeu
+
+> Skeu is a free screenshot editor that runs in the browser at https://skeu.app. It turns a plain screenshot into a polished image for docs, social posts, product pages and slides. There's no account and no watermark, and images are never uploaded.
+
+## What it does
+
+- Window frames: light or dark macOS-style window around the screenshot, or none
+- Size, roundness, padding and a shadow with adjustable offset, blur, spread and color
+- 3D tilt, rotation, and snapping to the edges and corners of the canvas
+- Gradient or solid backgrounds, from presets or any color
+- Crop, with edges that snap to straight lines in the image (for example, a browser's address bar)
+- Canvas sizes: match the image, 16:9, 4:3, 1:1, 3:2, 9:16, or drag to any size
+- Export PNG, JPG or WebP at 1×, 2× or 3×, or copy to the clipboard
+- Works on phones: pinch to scale
+- Undo and redo for every change
+
+## Pages
+
+- [Home](https://skeu.app): features and frequently asked questions
+- [Editor](https://skeu.app/editor): the app itself
