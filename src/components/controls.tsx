@@ -205,26 +205,3 @@ export function ResizeHandle({ label, hint, active, ...events }: { label: string
     <span ref={tip} id={id} className="t-tt" role="tooltip" aria-hidden={!show} data-show={show}><span className="t-tt-text">{hint}</span></span>
   </span>;
 }
-
-// transitions.dev "Text states swap": old text exits up, new text enters from below.
-export function TextSwap({ text, className = "" }: { text: string; className?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const [shown, setShown] = useState(text);
-  const [phase, setPhase] = useState<"idle" | "exit" | "enter">("idle");
-
-  useEffect(() => {
-    if (text === shown) return;
-    const exit = requestAnimationFrame(() => setPhase("exit"));
-    const swap = setTimeout(() => { setShown(text); setPhase("enter"); }, cssDuration("--text-swap-dur", 150));
-    return () => { cancelAnimationFrame(exit); clearTimeout(swap); };
-  }, [text, shown]);
-
-  useLayoutEffect(() => {
-    if (phase !== "enter" || !ref.current) return;
-    void ref.current.offsetHeight;
-    setPhase("idle");
-  }, [phase]);
-
-  const state = phase === "exit" ? "is-exit" : phase === "enter" ? "is-enter-start" : "";
-  return <span ref={ref} className={`t-text-swap ${state} ${className}`}>{shown}</span>;
-}

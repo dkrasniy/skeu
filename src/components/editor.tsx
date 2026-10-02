@@ -1,12 +1,12 @@
 "use client";
 
 import { type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent, useCallback, useEffect, useRef, useState } from "react";
-import { ArrowDown01Icon, ArrowDataTransferHorizontalIcon, Copy01Icon, RedoIcon, Tick02Icon, UndoIcon } from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, ArrowDataTransferHorizontalIcon, Copy01Icon, Delete02Icon, RedoIcon, Tick02Icon, UndoIcon } from "@hugeicons/core-free-icons";
 import { Artboard } from "./artboard";
 import { CropEditor } from "./crop";
-import { ColorChip, Icon, IconButton, Menu, PositionGrid, ResizeHandle, Segmented, Slider, SliderRow, TextSwap, TiltPad } from "./controls";
-import { type Asset, type Settings, anchorOffsets, canvasDimensions, clamp, DEFAULT_SETTINGS, GRADIENTS, RATIOS, SOLIDS } from "@/lib/editor-state";
-import { loadDocument, saveDocument } from "@/lib/storage";
+import { ColorChip, Icon, IconButton, Menu, PositionGrid, ResizeHandle, Segmented, Slider, SliderRow, TiltPad } from "./controls";
+import { type Asset, type Settings, anchorOffsets, canvasDimensions, clamp, DEFAULT_SETTINGS, GRADIENTS, INITIAL_DOCUMENT, RATIOS, SOLIDS } from "@/lib/editor-state";
+import { clearSavedDocument, loadStyle, saveStyle } from "@/lib/storage";
 import { useHistory } from "@/lib/use-history";
 
 type ImageFormat = "png" | "jpeg" | "webp";
@@ -42,10 +42,8 @@ function Logo() {
 export function Editor() {
   const { doc, update, begin, end, undo, redo, restore, adjusting, canUndo, canRedo } = useHistory();
   const s = doc.settings;
-  const [ready, setReady] = useState(false);
-  const [saveFailed, setSaveFailed] = useState(false);
   const [menu, setMenu] = useState<"size" | "export" | "shadow" | null>(null);
-  const [toast, setToast] = useState({ text: "", open: false });
+  const [toast, setToast] = useState<{ text: string; open: boolean; undoable: boolean }>({ text: "", open: false, undoable: false });
   const [format, setFormat] = useState<ImageFormat>("png");
   const [scaleChoice, setScaleChoice] = useState<Scale>("2");
   const [exporting, setExporting] = useState(false);
@@ -74,8 +72,8 @@ export function Editor() {
   const fits = (n: number) => dims.width * dims.height * n * n <= MAX_PIXELS && Math.max(dims.width, dims.height) * n <= MAX_SIDE;
   const exportScale = [Number(scaleChoice), 2, 1].find(fits) ?? 1;
 
-  const notify = useCallback((text: string) => {
-    setToast({ text, open: true });
+  const notify = useCallback((text: string, undoable = false) => {
+    setToast({ text, open: true, undoable });
     clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(t => ({ ...t, open: false })), 2600);
   }, []);
@@ -83,23 +81,17 @@ export function Editor() {
   const closeMenu = useCallback(() => setMenu(null), []);
   const toggleMenu = (next: "size" | "export" | "shadow") => setMenu(m => m === next ? null : next);
 
+  // Each visit starts with an empty canvas; only the style carries over.
   useEffect(() => {
-    let active = true;
-    loadDocument()
-      .then(saved => { if (active && saved) restore(saved); })
-      .catch(() => { if (active) setSaveFailed(true); })
-      .finally(() => { if (active) setReady(true); });
-    return () => { active = false; clearTimeout(toastTimer.current); clearTimeout(copiedTimer.current); clearTimeout(burstTimer.current); clearTimeout(wheelTimer.current); };
+    clearSavedDocument();
+    const style = loadStyle();
+    if (style) restore({ ...INITIAL_DOCUMENT, settings: style });
+    return () => { clearTimeout(toastTimer.current); clearTimeout(copiedTimer.current); clearTimeout(burstTimer.current); clearTimeout(wheelTimer.current); };
   }, [restore]);
-
   useEffect(() => {
-    if (!ready) return;
-    let active = true;
-    const timer = setTimeout(() => {
-      saveDocument(doc).then(() => { if (active) setSaveFailed(false); }).catch(() => { if (active) setSaveFailed(true); });
-    }, 450);
-    return () => { active = false; clearTimeout(timer); };
-  }, [doc, ready]);
+    const timer = setTimeout(() => saveStyle(s), 300);
+    return () => clearTimeout(timer);
+  }, [s]);
 
   // The view scale holds still while the canvas is being resized, then refits on release.
   useEffect(() => {
@@ -119,6 +111,14 @@ export function Editor() {
     update(d => ({ ...d, asset, name, settings: { ...d.settings, x: 0, y: 0 } }));
     setCropping(false);
   }, [update]);
+
+  // Undoable instead of confirmed: the toast offers Undo, and ⌘Z works too. Style settings stay for the next image.
+  const removeImage = useCallback(() => {
+    update(d => ({ ...d, asset: null, name: "Untitled", settings: { ...d.settings, x: 0, y: 0 } }));
+    setCropping(false);
+    setMenu(null);
+    notify("Image removed", true);
+  }, [update, notify]);
 
   const importFile = useCallback(async (file: File) => {
     if (!/^image\/(png|jpe?g|webp|avif|gif)$/.test(file.type)) { notify("Choose a PNG, JPG, WebP, AVIF, or GIF image"); return; }
@@ -374,12 +374,12 @@ export function Editor() {
             <input className="doc-name" aria-label="Screenshot name" value={doc.name} maxLength={80}
               onFocus={begin} onChange={e => update(d => ({ ...d, name: e.target.value }))}
               onBlur={e => { if (!e.target.value.trim()) update(d => ({ ...d, name: "Untitled" })); end(); }} />
-            {doc.asset && <TextSwap className="save-state" text={saveFailed ? "Not saved" : "Saved"} />}
           </div>
           <div className="bar-actions">
             {doc.asset && <>
               <button type="button" className="button ghost" aria-pressed={cropping} onClick={() => { setMenu(null); setCropping(c => !c); }}>Crop</button>
               <button type="button" className="button ghost" title="Replace image (⌘O)" onClick={() => fileInput.current?.click()}>Replace</button>
+              <IconButton label="Remove image" icon={Delete02Icon} onClick={removeImage} />
             </>}
             <div className="anchor">
               <button type="button" className="button ghost" data-menu-trigger aria-expanded={menu === "size"} onClick={() => toggleMenu("size")}>
@@ -526,6 +526,9 @@ export function Editor() {
       </aside>
     </main>
 
-    <div className="toast-layer"><div className={`toast t-toast ${toast.open ? "is-open" : ""}`} role="status" aria-live="polite">{toast.text}</div></div>
+    <div className="toast-layer"><div className={`toast t-toast ${toast.open ? "is-open" : ""}`} role="status" aria-live="polite" inert={!toast.open}>
+      {toast.text}
+      {toast.undoable && <button type="button" className="toast-action" onClick={() => { undo(); setToast(t => ({ ...t, open: false })); clearTimeout(toastTimer.current); }}>Undo</button>}
+    </div></div>
   </div>;
 }

@@ -50,7 +50,6 @@
 .logo { width: 24px; height: 24px; flex: none; margin-right: 2px; }
 .doc-name { min-width: 4ch; max-width: 260px; field-sizing: content; height: 30px; padding: 0 8px; border: 0; border-radius: var(--r-sm); background: transparent; font-size: var(--fs-14); font-weight: var(--fw-title); letter-spacing: var(--ls-15); text-overflow: ellipsis; outline: none; transition: background-color var(--hover); }
 .doc-name:hover, .doc-name:focus { background: var(--fill-subtle); }
-.save-state { color: var(--text-tertiary); white-space: nowrap; }
 .bar-actions { flex: none; display: flex; align-items: center; gap: 2px; }
 .icon-group { display: flex; margin-left: 6px; padding-left: 8px; border-left: 1px solid var(--hairline); }
 
@@ -218,7 +217,10 @@
 
 /* Toast */
 .toast-layer { position: fixed; left: 0; right: 0; bottom: 28px; z-index: 50; display: flex; justify-content: center; pointer-events: none; }
-.toast { padding: 10px 16px; border-radius: var(--r-control); background: var(--ink); color: var(--on-ink); font-weight: var(--fw-medium); box-shadow: var(--shadow-float); }
+.toast { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: var(--r-control); background: var(--ink); color: var(--on-ink); font-weight: var(--fw-medium); box-shadow: var(--shadow-float); }
+.toast.is-open { pointer-events: auto; }
+.toast-action { margin: -4px -8px -4px 0; padding: 4px 8px; border: 0; border-radius: var(--r-control); background: transparent; color: color-mix(in srgb, var(--on-ink) 70%, transparent); font-weight: var(--fw-title); cursor: pointer; transition: background-color var(--hover), color var(--hover); }
+.toast-action:hover { background: color-mix(in srgb, var(--on-ink) 12%, transparent); color: var(--on-ink); }
 
 /* Press feedback: controls dip slightly while held and ease back on release. Split buttons press as one piece. */
 .button, .icon-button, .chip-button, .label-button { transition: background-color var(--hover), color var(--hover), opacity var(--hover), transform var(--duration-quick) var(--ease-smooth-out); }
@@ -232,7 +234,7 @@
   .app { height: auto; min-height: 100dvh; padding: 12px 12px 0; }
   .workspace { grid-template-columns: 1fr; gap: 16px; }
   .stage { flex: none; height: 56dvh; }
-  .logo, .save-state { display: none; }
+  .logo { display: none; }
   .doc-name { min-width: 8ch; max-width: 140px; }
 
   /* Sticky canvas: the top bar scrolls away, then the canvas sticks and its preview shrinks into the
