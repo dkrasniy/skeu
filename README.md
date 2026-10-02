@@ -2,11 +2,14 @@
 
 <br>
 
-[![license](https://img.shields.io/github/license/dkrasniy/skeu)](LICENSE)
+[![Open skeu.app](https://img.shields.io/badge/open-skeu.app-6f86ff)](https://skeu.app)
+[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-**Skeu** makes beautiful screenshots. Drop one in, give it a window frame, a shadow and a background, and download it. Everything happens in the browser: your images are never uploaded.
+**Skeu** makes beautiful screenshots. Drop one in, give it a window frame, a shadow and a background, and download it. Try it at **[skeu.app](https://skeu.app)**.
 
-![Skeu](src/app/opengraph-image.png)
+Everything happens in the browser: your images are never uploaded.
+
+[![Skeu](src/app/opengraph-image.png)](https://skeu.app)
 
 ## Run it
 
