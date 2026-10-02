@@ -15,6 +15,12 @@ const FORMAT_LABEL: Record<ImageFormat, string> = { png: "PNG", jpeg: "JPG", web
 const MAX_PIXELS = 36_000_000;
 const MAX_SIDE = 8192;
 const SHADOW_KEYS = ["shadow", "shadowX", "shadowY", "shadowBlur", "shadowSpread", "shadowColor"] as const satisfies readonly (keyof Settings)[];
+// Each panel tray resets its own settings; canvas size lives in the size menu and is left alone.
+const SCREENSHOT_KEYS = ["frame", "size", "radius", "inset", ...SHADOW_KEYS] as const satisfies readonly (keyof Settings)[];
+const POSITION_KEYS = ["x", "y", "rotation", "tiltX", "tiltY"] as const satisfies readonly (keyof Settings)[];
+const BACKGROUND_KEYS = ["background", "color1", "color2", "angle"] as const satisfies readonly (keyof Settings)[];
+const isDefault = (s: Settings, keys: readonly (keyof Settings)[]) => keys.every(k => s[k] === DEFAULT_SETTINGS[k]);
+const defaults = (keys: readonly (keyof Settings)[]): Partial<Settings> => Object.fromEntries(keys.map(k => [k, DEFAULT_SETTINGS[k]]));
 const CONFETTI = ["#6f86ff", "#9b78f2", "#f08bbd", "#ffbd44", "#00c84e", "#ff625a"];
 
 interface Particle { dx: number; apex: number; fall: number; dur: number; delay: number; spin: number; flip: number; r0: number; w: number; h: number; round: boolean; color: string }
@@ -356,7 +362,6 @@ export function Editor() {
 
   const slider = (key: "size" | "radius" | "inset" | "rotation" | "tiltX" | "tiltY" | "angle" | "shadowX" | "shadowY" | "shadowBlur" | "shadowSpread", label: string, min: number, max: number, unit = "") =>
     <SliderRow label={label} value={s[key]} min={min} max={max} unit={unit} reset={DEFAULT_SETTINGS[key]} onChange={n => change({ [key]: n })} begin={begin} end={end} />;
-  const moved = s.x !== 0 || s.y !== 0 || s.rotation !== 0 || s.tiltX !== 0 || s.tiltY !== 0;
   const ratioLabel = s.ratio === "custom" ? `${dims.width} × ${dims.height}` : RATIOS.find(r => r.value === s.ratio)?.label;
 
   return <div className={`app ${dropping ? "is-dropping" : ""}`}
@@ -427,7 +432,8 @@ export function Editor() {
       <aside className="sheet panel" aria-label="Style">
         <div className="panel-scroll">
           <section className="tray">
-            <div className="tray-head"><h2>Screenshot</h2></div>
+            <div className="tray-head"><h2>Screenshot</h2>
+              {!isDefault(s, SCREENSHOT_KEYS) && <button type="button" className="link" onClick={() => change(defaults(SCREENSHOT_KEYS))}>Reset</button>}</div>
             <div className="tray-card">
             <div className="row"><span className="row-label">Frame</span>
               <Segmented label="Frame" value={s.frame} onChange={frame => change({ frame })} options={[{ value: "none", label: "None" }, { value: "light", label: "Light" }, { value: "dark", label: "Dark" }]} /></div>
@@ -444,8 +450,7 @@ export function Editor() {
               <Slider label="Shadow strength" value={s.shadow} min={0} max={100} reset={DEFAULT_SETTINGS.shadow} onChange={shadow => change({ shadow })} begin={begin} end={end} />
               <Menu open={menu === "shadow"} onClose={closeMenu} label="Shadow" origin="top-left">
                 <div className="menu-head"><span>Shadow</span>
-                  <button type="button" className="chip-button" disabled={SHADOW_KEYS.every(k => s[k] === DEFAULT_SETTINGS[k])}
-                    onClick={() => change(Object.fromEntries(SHADOW_KEYS.map(k => [k, DEFAULT_SETTINGS[k]])))}>Reset</button></div>
+                  <button type="button" className="chip-button" disabled={isDefault(s, SHADOW_KEYS)} onClick={() => change(defaults(SHADOW_KEYS))}>Reset</button></div>
                 {slider("shadowX", "X offset", -100, 100)}
                 {slider("shadowY", "Y offset", -100, 100)}
                 {slider("shadowBlur", "Blur", 0, 200)}
@@ -459,7 +464,7 @@ export function Editor() {
 
           <section className="tray">
             <div className="tray-head"><h2>Position</h2>
-              {moved && <button type="button" className="link" onClick={() => change({ x: 0, y: 0, rotation: 0, tiltX: 0, tiltY: 0 })}>Reset</button>}</div>
+              {!isDefault(s, POSITION_KEYS) && <button type="button" className="link" onClick={() => change(defaults(POSITION_KEYS))}>Reset</button>}</div>
             <div className="tray-card">
             {slider("rotation", "Rotate", -180, 180, "°")}
             <div className="row split">
@@ -473,7 +478,8 @@ export function Editor() {
           </section>
 
           <section className="tray">
-            <div className="tray-head"><h2>Background</h2></div>
+            <div className="tray-head"><h2>Background</h2>
+              {!isDefault(s, BACKGROUND_KEYS) && <button type="button" className="link" onClick={() => change(defaults(BACKGROUND_KEYS))}>Reset</button>}</div>
             <div className="tray-card">
             <div className="row"><span className="row-label">Type</span>
               <Segmented label="Background type" value={s.background} onChange={background => change({ background })} options={[{ value: "gradient", label: "Gradient" }, { value: "solid", label: "Solid" }]} /></div>

@@ -80,6 +80,9 @@
   background: linear-gradient(to right, transparent calc(33.33% - .5px), rgba(255, 255, 255, .45) 0 calc(33.33% + .5px), transparent 0 calc(66.66% - .5px), rgba(255, 255, 255, .45) 0 calc(66.66% + .5px), transparent 0),
     linear-gradient(to bottom, transparent calc(33.33% - .5px), rgba(255, 255, 255, .45) 0 calc(33.33% + .5px), transparent 0 calc(66.66% - .5px), rgba(255, 255, 255, .45) 0 calc(66.66% + .5px), transparent 0); }
 .crop-rect:active .crop-thirds { opacity: 1; }
+.crop-guide { position: absolute; z-index: 1; pointer-events: none; background: #ff3b7a; }
+.crop-guide.vertical { top: 0; bottom: 0; width: 1px; margin-left: -.5px; }
+.crop-guide.horizontal { left: 0; right: 0; height: 1px; margin-top: -.5px; }
 .crop-handle { position: absolute; width: 22px; height: 22px; margin: -11px; display: grid; place-items: center; }
 .crop-handle::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .2), 0 1px 3px rgba(0, 0, 0, .3); }
 .crop-handle.nw { left: 0; top: 0; cursor: nwse-resize; } .crop-handle.se { left: 100%; top: 100%; cursor: nwse-resize; }
@@ -219,6 +222,8 @@
 .toast-layer { position: fixed; left: 0; right: 0; bottom: 28px; z-index: 50; display: flex; justify-content: center; pointer-events: none; }
 .toast { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: var(--r-control); background: var(--ink); color: var(--on-ink); font-weight: var(--fw-medium); box-shadow: var(--shadow-float); }
 .toast.is-open { pointer-events: auto; }
+/* Plain slide and fade on an iOS-style curve: the recipe's blur and scale dropped. */
+.toast { --toast-open: 320ms; --toast-ease: cubic-bezier(0.32, 0.72, 0, 1); --toast-blur: 0px; --toast-scale: 1; }
 .toast-action { margin: -4px -8px -4px 0; padding: 4px 8px; border: 0; border-radius: var(--r-control); background: transparent; color: color-mix(in srgb, var(--on-ink) 70%, transparent); font-weight: var(--fw-title); cursor: pointer; transition: background-color var(--hover), color var(--hover); }
 .toast-action:hover { background: color-mix(in srgb, var(--on-ink) 12%, transparent); color: var(--on-ink); }
 

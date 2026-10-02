@@ -2,14 +2,18 @@
 
 import { type PointerEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { type Asset, type Rect, clamp, visibleRect } from "@/lib/editor-state";
+import { type Edges, findEdges, snapTo } from "@/lib/edges";
 
 type Edge = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 const EDGES: Edge[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 const MIN_SIZE = 32;
+const SNAP = 6; // screen pixels; hold ⇧, ⌃, ⌥ or ⌘ to drag freely
 
 export function CropEditor({ asset, onApply, onCancel }: { asset: Asset; onApply: (crop: Rect | null) => void; onCancel: () => void }) {
   const [rect, setRect] = useState<Rect>(() => visibleRect(asset));
   const [scale, setScale] = useState(0);
+  const [edges, setEdges] = useState<Edges | null>(null);
+  const [guides, setGuides] = useState<{ x: number | null; y: number | null }>({ x: null, y: null });
   const box = useRef<HTMLDivElement>(null);
   const drag = useRef<{ edge: Edge | "move"; clientX: number; clientY: number; start: Rect } | null>(null);
   const whole = rect.x === 0 && rect.y === 0 && rect.width === asset.width && rect.height === asset.height;
@@ -24,6 +28,12 @@ export function CropEditor({ asset, onApply, onCancel }: { asset: Asset; onApply
     observer.observe(el);
     return () => observer.disconnect();
   }, [asset.width, asset.height]);
+
+  useEffect(() => {
+    let live = true;
+    findEdges(asset.src, asset.width, asset.height).then(found => { if (live) setEdges(found); }, () => { /* no snapping */ });
+    return () => { live = false; };
+  }, [asset.src, asset.width, asset.height]);
 
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
@@ -46,20 +56,34 @@ export function CropEditor({ asset, onApply, onCancel }: { asset: Asset; onApply
   function move(e: PointerEvent<HTMLElement>) {
     const d = drag.current;
     if (!d || !scale) return;
-    if (!(e.buttons & 1)) { drag.current = null; return; }
+    if (!(e.buttons & 1)) { release(); return; }
     const dx = (e.clientX - d.clientX) / scale, dy = (e.clientY - d.clientY) / scale;
     const s = d.start;
     let { x, y, width, height } = s;
+    const next = { x: null as number | null, y: null as number | null };
+    // A dragged edge snaps to a nearby line in the image, so a sliver of address bar doesn't survive the crop.
+    const snap = (value: number, axis: "x" | "y", side: "start" | "end") => {
+      const free = e.shiftKey || e.ctrlKey || e.altKey || e.metaKey;
+      const hit = free || !edges ? null : snapTo(value, axis === "x" ? edges.cols : edges.rows, side, SNAP / scale);
+      if (hit !== null) next[axis] = hit;
+      return hit ?? value;
+    };
     if (d.edge === "move") {
       x = clamp(s.x + dx, 0, asset.width - s.width);
       y = clamp(s.y + dy, 0, asset.height - s.height);
     } else {
-      if (d.edge.includes("w")) { x = clamp(s.x + dx, 0, s.x + s.width - MIN_SIZE); width = s.x + s.width - x; }
-      if (d.edge.includes("e")) width = clamp(s.width + dx, MIN_SIZE, asset.width - s.x);
-      if (d.edge.includes("n")) { y = clamp(s.y + dy, 0, s.y + s.height - MIN_SIZE); height = s.y + s.height - y; }
-      if (d.edge.includes("s")) height = clamp(s.height + dy, MIN_SIZE, asset.height - s.y);
+      if (d.edge.includes("w")) { x = clamp(snap(s.x + dx, "x", "start"), 0, s.x + s.width - MIN_SIZE); width = s.x + s.width - x; }
+      if (d.edge.includes("e")) width = clamp(snap(s.x + s.width + dx, "x", "end"), s.x + MIN_SIZE, asset.width) - s.x;
+      if (d.edge.includes("n")) { y = clamp(snap(s.y + dy, "y", "start"), 0, s.y + s.height - MIN_SIZE); height = s.y + s.height - y; }
+      if (d.edge.includes("s")) height = clamp(snap(s.y + s.height + dy, "y", "end"), s.y + MIN_SIZE, asset.height) - s.y;
     }
     setRect({ x: Math.round(x), y: Math.round(y), width: Math.round(width), height: Math.round(height) });
+    setGuides(g => g.x === next.x && g.y === next.y ? g : next);
+  }
+
+  function release() {
+    drag.current = null;
+    setGuides({ x: null, y: null });
   }
 
   return <div ref={box} className="crop">
@@ -67,8 +91,10 @@ export function CropEditor({ asset, onApply, onCancel }: { asset: Asset; onApply
       <div className="crop-image" style={{ width: asset.width * scale, height: asset.height * scale }}>
         <img src={asset.src} alt={asset.name} draggable={false} />
         <div className="crop-shade"><i style={{ left: rect.x * scale, top: rect.y * scale, width: rect.width * scale, height: rect.height * scale }} /></div>
+        {guides.x !== null && <i className="crop-guide vertical" style={{ left: guides.x * scale }} />}
+        {guides.y !== null && <i className="crop-guide horizontal" style={{ top: guides.y * scale }} />}
         <div className="crop-rect" style={{ left: rect.x * scale, top: rect.y * scale, width: rect.width * scale, height: rect.height * scale }}
-          onPointerDown={e => grab("move", e)} onPointerMove={move} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }}>
+          onPointerDown={e => grab("move", e)} onPointerMove={move} onPointerUp={release} onPointerCancel={release} onLostPointerCapture={release}>
           <i className="crop-thirds" />
           {EDGES.map(edge => <span key={edge} className={`crop-handle ${edge}`} onPointerDown={e => grab(edge, e)} />)}
         </div>
