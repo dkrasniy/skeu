@@ -1,0 +1,225 @@
+"use client";
+
+import { type ComponentProps, type PointerEvent as ReactPointerEvent, type ReactNode, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
+import { TILT_MAX } from "@/lib/editor-state";
+
+function cssDuration(name: string, fallback: number) {
+  return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || fallback;
+}
+
+export function Icon({ icon, size = 16 }: { icon: IconSvgElement; size?: 14 | 16 | 18 | 20 }) {
+  return <HugeiconsIcon icon={icon} size={size} strokeWidth={1.8} color="currentColor" aria-hidden="true" />;
+}
+
+export function IconButton({ label, icon, onClick, disabled }: { label: string; icon: IconSvgElement; onClick: () => void; disabled?: boolean }) {
+  return <button type="button" className="icon-button" aria-label={label} title={label} onClick={onClick} disabled={disabled}><Icon icon={icon} /></button>;
+}
+
+// transitions.dev "Tabs sliding": JS measures the active tab, CSS tweens the pill.
+export function Segmented<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: { value: T; label: string }[]; onChange: (value: T) => void }) {
+  const bar = useRef<HTMLDivElement>(null);
+  const painted = useRef(false);
+  useLayoutEffect(() => {
+    const root = bar.current;
+    const pill = root?.querySelector<HTMLElement>(".t-tabs-pill");
+    if (!root || !pill) return;
+    const moveTo = (animate: boolean) => {
+      const tab = root.querySelector<HTMLElement>('[aria-selected="true"]');
+      if (!tab) return;
+      const prev = pill.style.transition;
+      if (!animate) pill.style.transition = "none";
+      pill.style.transform = `translateX(${tab.offsetLeft}px)`;
+      pill.style.width = `${tab.offsetWidth}px`;
+      if (!animate) { void pill.offsetWidth; pill.style.transition = prev; }
+    };
+    moveTo(painted.current);
+    painted.current = true;
+    const observer = new ResizeObserver(() => moveTo(false));
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, [value]);
+  return <div ref={bar} className="t-tabs segmented" role="tablist" aria-label={label}>
+    <span className="t-tabs-pill" aria-hidden="true" />
+    {options.map(o => <button type="button" role="tab" key={o.value} className="t-tab" aria-selected={o.value === value} onClick={() => onChange(o.value)}>{o.label}</button>)}
+  </div>;
+}
+
+interface SliderProps { label: string; value: number; min: number; max: number; reset: number; onChange: (n: number) => void; begin: () => void; end: () => void; id?: string }
+
+export function Slider({ label, value, min, max, reset, onChange, begin, end, id }: SliderProps) {
+  return <input id={id} aria-label={id ? undefined : label} className="slider" type="range" min={min} max={max} value={value} title="Double-click to reset"
+    onPointerDown={begin} onPointerUp={end} onPointerCancel={end}
+    onKeyDown={e => { if (!e.repeat) begin(); }} onKeyUp={end}
+    onDoubleClick={() => onChange(reset)}
+    onChange={e => onChange(Number(e.target.value))} />;
+}
+
+export function SliderRow({ unit = "", ...props }: SliderProps & { unit?: string }) {
+  const id = useId();
+  return <div className="row">
+    <label className="row-label" htmlFor={id}>{props.label}<span className="row-value">{props.value}{unit}</span></label>
+    <Slider {...props} id={id} />
+  </div>;
+}
+
+const KNOB_TRAVEL = 6;   // px the knob can move inside the pad at full tilt
+const DRAG_RANGE = 40;   // px of pointer travel for full tilt
+const STRETCH = 7;       // px the knob can be pulled past its travel
+
+// The pad is small, so drag distance (not pointer position) sets the tilt. Past full tilt
+// the knob keeps following with growing resistance, then eases back on release.
+function knobOffset(tiltX: number, tiltY: number, overshoot = 0) {
+  const px = tiltY / TILT_MAX, py = -tiltX / TILT_MAX;
+  const r = Math.hypot(px, py);
+  if (!r) return { x: 0, y: 0 };
+  const reach = Math.min(r, 1) * KNOB_TRAVEL + STRETCH * (1 - 1 / (overshoot / 30 + 1));
+  return { x: px / r * reach, y: py / r * reach };
+}
+
+export function TiltPad({ x, y, onChange, begin, end }: { x: number; y: number; onChange: (tiltX: number, tiltY: number) => void; begin: () => void; end: () => void }) {
+  const grab = useRef<{ clientX: number; clientY: number; x: number; y: number } | null>(null);
+  const [overshoot, setOvershoot] = useState<number | null>(null);
+  const shown = knobOffset(x, y, overshoot ?? 0);
+
+  function track(e: ReactPointerEvent<HTMLDivElement>) {
+    const g = grab.current;
+    if (!g) return;
+    // Pointer travel in tilt units, starting from the tilt at grab time.
+    const ty = g.y + (e.clientX - g.clientX) / DRAG_RANGE * TILT_MAX;
+    const tx = g.x - (e.clientY - g.clientY) / DRAG_RANGE * TILT_MAX;
+    const r = Math.hypot(tx, ty), k = r > TILT_MAX ? TILT_MAX / r : 1;
+    onChange(Math.round(tx * k), Math.round(ty * k));
+    setOvershoot(Math.max(0, (r - TILT_MAX) / TILT_MAX * DRAG_RANGE));
+  }
+  function release() {
+    grab.current = null;
+    setOvershoot(null);
+    end();
+  }
+
+  return <div className={`tilt-pad ${overshoot !== null ? "is-moving" : ""}`} role="group" tabIndex={0}
+    aria-label={`Tilt, ${x}° by ${y}°`} title="Drag to tilt. Arrow keys nudge. Double-click to reset."
+    onPointerDown={e => { if (e.button !== 0) return; e.preventDefault(); e.currentTarget.focus(); e.currentTarget.setPointerCapture(e.pointerId); begin(); grab.current = { clientX: e.clientX, clientY: e.clientY, x, y }; setOvershoot(0); }}
+    onPointerMove={track} onPointerUp={release} onPointerCancel={release}
+    onDoubleClick={() => onChange(0, 0)}
+    onKeyDown={e => {
+      const d = { ArrowUp: [1, 0], ArrowDown: [-1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] }[e.key];
+      if (!d && e.key !== "Home") return;
+      e.preventDefault();
+      if (!e.repeat) begin();
+      if (!d) onChange(0, 0);
+      else onChange(Math.max(-TILT_MAX, Math.min(TILT_MAX, x + d[0])), Math.max(-TILT_MAX, Math.min(TILT_MAX, y + d[1])));
+    }} onKeyUp={end}>
+    <span className="tilt-knob" style={{ transform: `translate(${shown.x}px, ${shown.y}px)` }} />
+  </div>;
+}
+
+const ANCHORS = [-1, 0, 1].flatMap(row => [-1, 0, 1].map(col => ({ row, col })));
+const ANCHOR_NAMES = [["top left", "top", "top right"], ["left", "center", "right"], ["bottom left", "bottom", "bottom right"]];
+
+export function PositionGrid({ x, y, reach, onChange }: { x: number; y: number; reach: { x: number; y: number }; onChange: (x: number, y: number) => void }) {
+  return <div className="position-grid" role="group" aria-label="Position">
+    {ANCHORS.map(({ row, col }) => {
+      const ax = col * reach.x, ay = row * reach.y;
+      const active = Math.abs(x - ax) < .5 && Math.abs(y - ay) < .5;
+      return <button type="button" key={`${row}${col}`} className="position-dot" aria-pressed={active} aria-label={`Move to ${ANCHOR_NAMES[row + 1][col + 1]}`}
+        title={ANCHOR_NAMES[row + 1][col + 1]} onClick={() => onChange(ax, ay)}><span /></button>;
+    })}
+  </div>;
+}
+
+export function ColorChip({ label, value, onChange, begin, end }: { label: string; value: string; onChange: (hex: string) => void; begin: () => void; end: () => void }) {
+  return <label className="color-chip" style={{ background: value }} title={`${label} ${value.toUpperCase()}`}>
+    <input type="color" aria-label={label} value={value} onFocus={begin} onBlur={end} onChange={e => onChange(e.target.value)} />
+  </label>;
+}
+
+// transitions.dev "Menu dropdown": .is-open to show, .is-closing for the faster exit.
+export function Menu({ open, onClose, label, origin, children }: { open: boolean; onClose: () => void; label: string; origin: "top-left" | "top-right" | "bottom-right"; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const wasOpen = useRef(open);
+  const [closing, setClosing] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const node = ref.current;
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const pointer = (e: PointerEvent) => {
+      const target = e.target as HTMLElement;
+      if (!node?.contains(target) && !target.closest("[data-menu-trigger]")) onClose();
+    };
+    document.addEventListener("keydown", key);
+    document.addEventListener("pointerdown", pointer);
+    return () => { document.removeEventListener("keydown", key); document.removeEventListener("pointerdown", pointer); };
+  }, [open, onClose]);
+
+  useEffect(() => {
+    const closed = wasOpen.current && !open;
+    wasOpen.current = open;
+    if (!closed) return;
+    const start = requestAnimationFrame(() => setClosing(true));
+    const timer = setTimeout(() => setClosing(false), cssDuration("--dropdown-close-dur", 150));
+    return () => { cancelAnimationFrame(start); clearTimeout(timer); setClosing(false); };
+  }, [open]);
+
+  return <div ref={ref} role="dialog" aria-label={label} inert={!open} data-origin={origin}
+    className={`menu t-dropdown ${origin} ${open ? "is-open" : closing ? "is-closing" : ""}`}>{children}</div>;
+}
+
+type HandleEvents = Pick<ComponentProps<"button">, "onPointerDown" | "onPointerMove" | "onPointerUp" | "onKeyDown" | "onKeyUp">;
+
+// transitions.dev "Tooltip": the bubble is measured and placed while hidden, so only the appear animates.
+export function ResizeHandle({ label, hint, active, ...events }: { label: string; hint: string; active: boolean } & HandleEvents) {
+  const id = useId();
+  const group = useRef<HTMLSpanElement>(null);
+  const tip = useRef<HTMLSpanElement>(null);
+  const [hovered, setHovered] = useState(false);
+  const show = hovered && !active;
+
+  function place(trigger: HTMLElement) {
+    const g = group.current;
+    const t = tip.current;
+    const text = t?.firstElementChild;
+    if (!g || !t || !text) return;
+    const cs = getComputedStyle(t);
+    const width = Math.ceil(text.scrollWidth + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight));
+    // Right-aligned rather than centered: the handle sits in the canvas corner.
+    const x = trigger.getBoundingClientRect().right - g.getBoundingClientRect().left - width;
+    t.style.transition = "none";
+    t.style.width = `${width}px`;
+    t.style.setProperty("--tt-x", `${x}px`);
+    void t.offsetWidth;
+    t.style.transition = "";
+    setHovered(true);
+  }
+
+  return <span ref={group} className="t-tt-group" onPointerLeave={() => setHovered(false)}>
+    <button type="button" className="t-tt-trigger resize-grip" aria-label={label} aria-describedby={id}
+      onPointerEnter={e => place(e.currentTarget)} onFocus={e => place(e.currentTarget)} onBlur={() => setHovered(false)} {...events} />
+    <span ref={tip} id={id} className="t-tt" role="tooltip" aria-hidden={!show} data-show={show}><span className="t-tt-text">{hint}</span></span>
+  </span>;
+}
+
+// transitions.dev "Text states swap": old text exits up, new text enters from below.
+export function TextSwap({ text, className = "" }: { text: string; className?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [shown, setShown] = useState(text);
+  const [phase, setPhase] = useState<"idle" | "exit" | "enter">("idle");
+
+  useEffect(() => {
+    if (text === shown) return;
+    const exit = requestAnimationFrame(() => setPhase("exit"));
+    const swap = setTimeout(() => { setShown(text); setPhase("enter"); }, cssDuration("--text-swap-dur", 150));
+    return () => { cancelAnimationFrame(exit); clearTimeout(swap); };
+  }, [text, shown]);
+
+  useLayoutEffect(() => {
+    if (phase !== "enter" || !ref.current) return;
+    void ref.current.offsetHeight;
+    setPhase("idle");
+  }, [phase]);
+
+  const state = phase === "exit" ? "is-exit" : phase === "enter" ? "is-enter-start" : "";
+  return <span ref={ref} className={`t-text-swap ${state} ${className}`}>{shown}</span>;
+}

@@ -1,0 +1,167 @@
+/* Krasny tokens
+   Knobs are set as attributes on <html>:
+     data-radius="soft|balanced|sharp"   (default soft)
+     data-neutrals="neutral|warm|cool"    (default neutral)
+     data-density="comfortable|compact"   (default comfortable)
+     data-frame="grey|inverse"            (default grey; the dark theme always uses a black frame)
+     data-primary="ink|accent"            (default ink)
+     data-theme="light|dark"              (optional; otherwise follows the OS)
+   Brand accent: override --accent, --accent-hover, and --accent-soft in your own :root rule.
+   Typeface: override --font. */
+
+:root{
+  /* type */
+  --font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --fs-11:11px; --fs-12:12px; --fs-13:13px; --fs-14:14px; --fs-15:15px; --fs-18:18px; --fs-28:28px;
+  --fw-regular:400; --fw-medium:500; --fw-title:550;
+  --ls-28:-.024em; --ls-18:-.012em; --ls-15:-.01em; --ls-base:-.003em;
+
+  /* frame + sheet */
+  --frame:#f3f3f4; --sheet:#fff;
+
+  /* neutrals */
+  --surface:#fff; --fill:#f1f1f1; --fill-subtle:#f7f7f7; --fill-strong:#e8e8e8; --canvas:#f1f1f1;
+  --border:#e3e3e3; --hairline:#ebebeb;
+  --text:#303030; --text-secondary:#616161; --text-tertiary:#8a8a8a;
+  --ink:#1a1a1a; --on-ink:#fff;
+
+  /* accent (brand knob) */
+  --accent:#2f6fe4; --accent-hover:#2a63cc; --accent-soft:rgba(47,111,228,.14);
+  --primary:var(--ink); --on-primary:var(--on-ink);
+
+  /* status */
+  --success:#2e9e5b; --attention-bg:#ffe98a; --attention-ink:#4d3d00; --critical:#b3261e; --critical-bg:#fde7e5; --inactive:#c4c4c4;
+
+  /* AI signature */
+  --ai-1:#ff3d8b; --ai-2:#ff5a4e; --ai-3:#ff7b1c; --ai-glow:#ff4fa3; --ai-mark:#7a5af8;
+  --ai-gradient: radial-gradient(120% 160% at 0% 0%, var(--ai-glow) 0, transparent 55%), linear-gradient(98deg, var(--ai-1), var(--ai-2) 52%, var(--ai-3));
+
+  /* dark toolbar */
+  --tb-bg:var(--ink); --tb-pill:#383838; --tb-text:#f1f1f1; --tb-dim:#7a7a7a;
+
+  /* radius: soft (default) */
+  --r-xs:7px; --r-sm:10px; --r-md:12px; --r-lg:16px; --r-xl:18px; --r-control:999px; --r-check:5px;
+
+  /* elevation */
+  --shadow-card:0 0 0 1px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-float:0 0 0 1px rgba(0,0,0,.06), 0 4px 14px rgba(0,0,0,.07);
+  --shadow-overlay:0 0 0 1px rgba(0,0,0,.06), 0 18px 44px rgba(0,0,0,.16);
+  --shadow-toolbar:0 8px 24px rgba(0,0,0,.16), 0 1px 2px rgba(0,0,0,.2);
+  --shadow-preview:0 0 0 1px rgba(0,0,0,.06), 0 18px 40px rgba(0,0,0,.07);
+
+  /* spacing + sizing (comfortable) */
+  --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:20px; --s-6:24px; --s-7:28px; --s-8:32px; --s-10:40px; --s-12:48px;
+  --h-sm:28px; --h-control:32px; --h-input:34px; --h-row:36px; --h-floating:50px;
+  --row-pad-y:12px; --row-pad-x:18px; --card-pad:20px;
+  --page-pad:40px; --page-max:1040px; --page-max-wide:1180px; --side-col:290px; --col-gap:48px;
+
+  /* motion */
+  --ease:cubic-bezier(.2,.8,.2,1); --ease-out:cubic-bezier(.22,1,.36,1);
+  --dur-fast:150ms; --dur-base:200ms; --dur-route:280ms; --dur-behind:360ms; --dur-sheet-in:440ms; --dur-sheet-out:240ms;
+  --dim:.07; --sheet-edge:0 0 0 1px rgba(0,0,0,.06), 0 1px 3px rgba(0,0,0,.04);
+
+  color-scheme:light;
+}
+
+/* radius presets */
+:root[data-radius="balanced"]{ --r-xs:6px; --r-sm:8px; --r-md:10px; --r-lg:12px; --r-xl:14px; --r-control:10px; --r-check:4px; }
+:root[data-radius="sharp"]{ --r-xs:3px; --r-sm:4px; --r-md:5px; --r-lg:6px; --r-xl:8px; --r-control:4px; --r-check:3px; }
+
+/* neutral temperature */
+:root[data-neutrals="warm"]{ --fill:#f3f2ef; --fill-subtle:#f8f7f5; --fill-strong:#eae8e4; --canvas:#f3f2ef; --border:#e5e3df; --hairline:#ecebe7; --text:#31302e; --text-secondary:#63605b; --text-tertiary:#8c8983; }
+:root[data-neutrals="cool"]{ --fill:#f0f2f4; --fill-subtle:#f6f7f9; --fill-strong:#e6e9ec; --canvas:#f0f2f4; --border:#e1e5e9; --hairline:#e9ecef; --text:#2e3033; --text-secondary:#5e6268; --text-tertiary:#878c93; }
+
+/* density */
+:root[data-density="compact"]{ --h-sm:24px; --h-control:28px; --h-input:30px; --h-row:30px; --h-floating:44px; --row-pad-y:9px; --row-pad-x:14px; --card-pad:16px; --page-pad:28px; }
+
+/* primary knob */
+:root[data-primary="accent"]{ --primary:var(--accent); --on-primary:#fff; }
+
+/* inverse frame: white background, light grey sheet, white cards on the sheet */
+:root[data-frame="inverse"]{ --frame:#fff; --sheet:#f5f5f6; --fill:#e9e9eb; --fill-subtle:#f7f7f8; --fill-strong:#e0e0e2; --canvas:#ececee;
+  --sheet-edge:0 0 0 1px rgba(0,0,0,.05); }
+/* (the dark-theme blocks below come after this, so the dark theme always wins with a black frame) */
+
+/* dark theme */
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --surface:#1b1b1b; --fill:#2a2a2a; --fill-subtle:#222; --fill-strong:#333; --canvas:#121212;
+  --border:#363636; --hairline:#2b2b2b; --text:#ececec; --text-secondary:#a6a6a6; --text-tertiary:#767676;
+  --ink:#f2f2f2; --on-ink:#141414; --tb-bg:#2c2c2c; --tb-pill:#454545;
+  --attention-bg:#4a3d05; --attention-ink:#ffe27a; --critical:#ff8a80; --critical-bg:#3d1714;
+  --accent-soft:rgba(90,140,255,.22);
+  --shadow-card:0 0 0 1px rgba(255,255,255,.07);
+  --shadow-float:0 0 0 1px rgba(255,255,255,.08), 0 6px 18px rgba(0,0,0,.45);
+  --shadow-overlay:0 0 0 1px rgba(255,255,255,.08), 0 18px 44px rgba(0,0,0,.55);
+  --frame:#000; --sheet:#1b1b1b; --dim:.35; --sheet-edge:none; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --surface:#1b1b1b; --fill:#2a2a2a; --fill-subtle:#222; --fill-strong:#333; --canvas:#121212;
+  --border:#363636; --hairline:#2b2b2b; --text:#ececec; --text-secondary:#a6a6a6; --text-tertiary:#767676;
+  --ink:#f2f2f2; --on-ink:#141414; --tb-bg:#2c2c2c; --tb-pill:#454545;
+  --attention-bg:#4a3d05; --attention-ink:#ffe27a; --critical:#ff8a80; --critical-bg:#3d1714;
+  --accent-soft:rgba(90,140,255,.22);
+  --shadow-card:0 0 0 1px rgba(255,255,255,.07);
+  --shadow-float:0 0 0 1px rgba(255,255,255,.08), 0 6px 18px rgba(0,0,0,.45);
+  --shadow-overlay:0 0 0 1px rgba(255,255,255,.08), 0 18px 44px rgba(0,0,0,.55);
+  --frame:#000; --sheet:#1b1b1b; --dim:.35; --sheet-edge:none; color-scheme:dark;
+}
+
+/* base */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--frame);color:var(--text);font-family:var(--font);font-size:var(--fs-13);line-height:1.4;letter-spacing:var(--ls-base);-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* a few primitives to start from */
+.k-shell{height:100dvh;display:flex;gap:8px;padding:8px}
+.k-sheet{flex:1;min-width:0;background:var(--sheet);border-radius:var(--r-lg);overflow:hidden;display:flex;flex-direction:column}
+.k-sheet{box-shadow:var(--sheet-edge)}
+
+/* stacked sheet: the page behind + the rising sheet (see tokens.md, Stacked sheet motion) */
+.k-stack{position:relative;flex:1;min-width:0}
+.k-stack>.k-sheet{position:absolute;inset:0}
+.k-sheet--behind{transform-origin:50% 0;transition:transform var(--dur-behind) var(--ease-out);will-change:transform}
+.k-sheet--behind::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none;transition:opacity var(--dur-behind) var(--ease-out)}
+.k-sheet--behind.is-covered{transform:scale(.965);pointer-events:none}
+.k-sheet--behind.is-covered::after{opacity:var(--dim)}
+.k-sheet--top{top:14px!important;will-change:transform;box-shadow:var(--sheet-edge),0 -8px 28px rgba(0,0,0,.08);animation:k-sheet-in var(--dur-sheet-in) both}
+.k-sheet--top.is-leaving{animation:k-sheet-out var(--dur-sheet-out) cubic-bezier(.4,0,.9,.6) both;pointer-events:none}
+@keyframes k-sheet-in{
+  0%{transform:translateY(100%);animation-timing-function:cubic-bezier(.2,.9,.3,1)}
+  68%{transform:translateY(-5px);animation-timing-function:cubic-bezier(.4,0,.4,1)}
+  100%{transform:translateY(0)}
+}
+@keyframes k-sheet-out{from{transform:translateY(0)}to{transform:translateY(100%)}}
+/* Usage: remove .is-covered from the page behind and add .is-leaving to the top sheet at the same time,
+   then unmount the top sheet after --dur-sheet-out. */
+.k-page{max-width:var(--page-max);margin:0 auto;padding:var(--page-pad) var(--page-pad) 140px;width:100%}
+.k-title{font-size:var(--fs-28);font-weight:var(--fw-title);letter-spacing:var(--ls-28);line-height:1.15;margin:0}
+.k-subtitle{color:var(--text-secondary);margin:8px 0 0}
+.k-card{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow-card);overflow:hidden}
+.k-tray{background:var(--fill-subtle);border-radius:var(--r-xl);box-shadow:inset 0 0 0 1px var(--hairline);padding:0}
+.k-btn{height:var(--h-control);padding:0 14px;border:0;border-radius:var(--r-control);font-weight:var(--fw-medium);display:inline-flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
+.k-btn--primary{background:var(--primary);color:var(--on-primary)}
+.k-btn--secondary{background:var(--fill);color:var(--text)}
+.k-btn--secondary:hover{background:var(--fill-strong)}
+.k-btn--ghost{background:transparent;color:var(--text-secondary)}
+.k-btn--ghost:hover{background:var(--fill);color:var(--text)}
+.k-btn:disabled{opacity:.4;cursor:default}
+.k-input{width:100%;height:var(--h-input);border:0;border-radius:var(--r-sm);padding:0 10px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--border);outline:0}
+.k-input:focus{box-shadow:inset 0 0 0 1px var(--accent),0 0 0 3px var(--accent-soft)}
+.k-badge{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:var(--r-xs);font-size:var(--fs-12);font-weight:var(--fw-medium);background:var(--fill);color:var(--text-secondary)}
+.k-badge--attention{background:var(--attention-bg);color:var(--attention-ink)}
+.k-seg{display:inline-flex;gap:2px;padding:3px;background:var(--fill);border-radius:var(--r-control)}
+.k-seg>button{height:28px;padding:0 14px;border:0;border-radius:var(--r-control);background:transparent;color:var(--text-secondary);font-weight:var(--fw-medium);cursor:pointer}
+.k-seg>button[aria-selected="true"]{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.04)}
+.k-toolbar{display:inline-flex;align-items:center;gap:5px;padding:5px;border-radius:var(--r-control);background:var(--tb-bg);box-shadow:var(--shadow-toolbar)}
+.k-toolbar>button{height:30px;padding:0 13px;border:0;border-radius:var(--r-control);background:var(--tb-pill);color:var(--tb-text);font-weight:var(--fw-medium);cursor:pointer}
+.k-toolbar>button:disabled{color:var(--tb-dim)}
+.k-toolbar>.k-toolbar__primary{background:#fff;color:#111;font-weight:var(--fw-title)}
+.k-ai-card{border-radius:var(--r-xl);padding:0 5px 5px;background:var(--ai-gradient)}
+.k-ai-card__head{display:flex;justify-content:space-between;padding:9px 12px 8px;color:#fff;font-size:var(--fs-12);font-weight:600}
+.k-ai-card__body{background:var(--surface);border-radius:calc(var(--r-xl) - 5px);padding:6px}
+.k-orb{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.75) 0,rgba(255,255,255,0) 38%),linear-gradient(135deg,var(--ai-1),var(--ai-2) 50%,var(--ai-3))}
