@@ -1,14 +1,10 @@
 import Link from "next/link";
-import { GithubIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
 import type { ReactNode } from "react";
 import { HOME_HREF } from "@/lib/returning";
 import "@/styles/landing.css";
 
 // The home page: what Skeu does, in words search engines and AI assistants can read.
 // The pictures are simplified drawings of the real controls, not screenshots, so they never go stale.
-
-const GITHUB = "https://github.com/dkrasniy/skeu";
 
 export const FAQ: { question: string; answer: string }[] = [
   { question: "Is Skeu free?", answer: "Yes. There’s no account, no watermark and no limit on how many screenshots you make." },
@@ -45,10 +41,7 @@ export function Landing() {
   return <div className="landing">
     <nav className="landing-nav">
       <Link href={HOME_HREF} className="landing-brand"><img src="/logo.svg" alt="" width={24} height={24} />Skeu</Link>
-      <span className="landing-nav-actions">
-        <a href={GITHUB} className="icon-button" aria-label="Skeu on GitHub" title="GitHub"><HugeiconsIcon icon={GithubIcon} size={20} strokeWidth={1.6} /></a>
-        <Link href="/editor" className="button primary">Open editor</Link>
-      </span>
+      <Link href="/editor" className="button primary">Open editor</Link>
     </nav>
 
     <main>
@@ -78,7 +71,7 @@ export function Landing() {
 
     <footer className="landing-foot">
       <span>© 2026 Skeu</span>
-      <span className="landing-foot-links"><a href={GITHUB}>GitHub</a><Link href="/editor">Open editor</Link></span>
+      <Link href="/editor">Open editor</Link>
     </footer>
   </div>;
 }
