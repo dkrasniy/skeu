@@ -1,6 +1,8 @@
 {
   "name": "skeu",
   "version": "0.1.0",
+  "description": "Make beautiful screenshots.",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
