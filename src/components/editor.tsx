@@ -65,6 +65,10 @@ export function Editor() {
   const importId = useRef(0);
   const drag = useRef<{ clientX: number; clientY: number; x: number; y: number; width: number; height: number } | null>(null);
   const sizing = useRef<{ clientX: number; clientY: number; width: number; height: number; maxWidth: number; maxHeight: number } | null>(null);
+  const touches = useRef(new Map<number, { x: number; y: number }>());
+  const pinch = useRef<{ gap: number; size: number } | null>(null);
+  const wheelSize = useRef<number | null>(null);
+  const wheelTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const dims = canvasDimensions(s, doc.asset);
   const fits = (n: number) => dims.width * dims.height * n * n <= MAX_PIXELS && Math.max(dims.width, dims.height) * n <= MAX_SIDE;
@@ -85,7 +89,7 @@ export function Editor() {
       .then(saved => { if (active && saved) restore(saved); })
       .catch(() => { if (active) setSaveFailed(true); })
       .finally(() => { if (active) setReady(true); });
-    return () => { active = false; clearTimeout(toastTimer.current); clearTimeout(copiedTimer.current); clearTimeout(burstTimer.current); };
+    return () => { active = false; clearTimeout(toastTimer.current); clearTimeout(copiedTimer.current); clearTimeout(burstTimer.current); clearTimeout(wheelTimer.current); };
   }, [restore]);
 
   useEffect(() => {
@@ -209,7 +213,7 @@ export function Editor() {
   }, [undo, redo, download, copy]);
 
   function startDrag(e: PointerEvent<HTMLDivElement>) {
-    if (e.button !== 0 || !artboard.current) return;
+    if (e.button !== 0 || !artboard.current || pinch.current) return;
     e.preventDefault();
     begin();
     setDragging(true);
@@ -232,6 +236,88 @@ export function Editor() {
     setDragging(false);
     end();
   }
+
+  // Pinch anywhere on the canvas scales the screenshot. Runs in the capture phase so a second
+  // finger takes over before the card can start a drag with it.
+  const fingerGap = () => {
+    const [a, b] = [...touches.current.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  };
+  function pinchDown(e: PointerEvent<HTMLDivElement>) {
+    if (e.pointerType === "mouse" || !doc.asset) return;
+    touches.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (touches.current.size !== 2) return;
+    if (drag.current) { drag.current = null; setDragging(false); end(); }
+    e.currentTarget.setPointerCapture(e.pointerId);
+    begin();
+    pinch.current = { gap: fingerGap(), size: s.size };
+  }
+  function pinchMove(e: PointerEvent<HTMLDivElement>) {
+    if (!touches.current.has(e.pointerId)) return;
+    touches.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const p = pinch.current;
+    if (!p || touches.current.size < 2 || !p.gap) return;
+    change({ size: clamp(Math.round(p.size * fingerGap() / p.gap), 20, 150) });
+  }
+  function pinchUp(e: PointerEvent<HTMLDivElement>) {
+    touches.current.delete(e.pointerId);
+    if (pinch.current && touches.current.size < 2) { pinch.current = null; end(); }
+  }
+
+  // Mobile: as the page scrolls, collapse the sticky canvas and shrink the preview to fit what is still showing.
+  useEffect(() => {
+    const el = stage.current;
+    const column = el?.parentElement;
+    const workspace = column?.parentElement;
+    if (!el || !column || !workspace) return;
+    const mobile = matchMedia("(max-width: 860px)");
+    const RATIO = .42;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      if (!mobile.matches) {
+        for (const name of ["--collapse", "--collapse-ratio", "--stick"]) column.style.removeProperty(name);
+        el.style.removeProperty("--shrink");
+        return;
+      }
+      const collapse = Math.round(el.offsetHeight * RATIO);
+      // The stage's static top in the page (column top, minus its negative margin, plus the stage's offset in it).
+      const start = workspace.getBoundingClientRect().top + window.scrollY + parseFloat(getComputedStyle(column).marginTop) + el.offsetTop;
+      // Stick once the top bar is gone and `collapse` px of the stage has scrolled under the top edge.
+      column.style.setProperty("--stick", `${-(el.offsetTop + collapse)}px`);
+      column.style.setProperty("--collapse", `${collapse}px`);
+      column.style.setProperty("--collapse-ratio", String(RATIO));
+      el.style.setProperty("--shrink", String(clamp((window.scrollY - start) / collapse, 0, 1)));
+    };
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
+    update();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    mobile.addEventListener("change", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      mobile.removeEventListener("change", schedule);
+    };
+  }, [doc.asset]);
+
+  // A trackpad pinch arrives as ctrl + wheel; treat it like a touch pinch over the canvas.
+  useEffect(() => {
+    const el = stage.current;
+    if (!el || !doc.asset) return;
+    const wheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      if (wheelSize.current === null) { wheelSize.current = s.size; begin(); }
+      wheelSize.current = clamp(wheelSize.current * Math.exp(-e.deltaY / 100), 20, 150);
+      change({ size: Math.round(wheelSize.current) });
+      clearTimeout(wheelTimer.current);
+      wheelTimer.current = setTimeout(() => { wheelSize.current = null; end(); }, 250);
+    };
+    el.addEventListener("wheel", wheel, { passive: false });
+    return () => el.removeEventListener("wheel", wheel);
+  }, [doc.asset, s.size, begin, end, change]);
 
   // The canvas grows from its center, so the corner moves half as far as the size changes.
   function startResize(e: PointerEvent<HTMLButtonElement>) {
@@ -316,7 +402,7 @@ export function Editor() {
           </div>
         </header>
 
-        <div className="stage" ref={stage}>
+        <div className="stage" ref={stage} onPointerDownCapture={pinchDown} onPointerMoveCapture={pinchMove} onPointerUpCapture={pinchUp} onPointerCancelCapture={pinchUp}>
           {doc.asset && cropping ? <CropEditor asset={doc.asset} onCancel={() => setCropping(false)}
             onApply={crop => { update(d => d.asset ? { ...d, asset: { ...d.asset, crop } } : d); setCropping(false); }} />
           : doc.asset ? <div className="preview" style={{ width: dims.width * fit, height: dims.height * fit }}>
