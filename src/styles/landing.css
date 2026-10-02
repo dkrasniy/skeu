@@ -7,11 +7,10 @@
 .landing-nav-actions { display: flex; align-items: center; gap: 6px; }
 .landing-brand { display: flex; align-items: center; gap: 8px; font-size: var(--fs-15); font-weight: var(--fw-title); letter-spacing: var(--ls-15); }
 
-.landing-hero { max-width: 620px; padding: 72px 0 40px; }
+.landing-hero { max-width: 620px; padding: 72px 0 56px; }
 .landing-hero h1 { margin: 0; font-size: 40px; line-height: 1.1; font-weight: var(--fw-title); letter-spacing: -.03em; color: var(--ink); }
 .landing-hero p { margin: 16px 0 28px; font-size: var(--fs-15); line-height: 1.55; color: var(--text-secondary); }
 
-.landing-preview { margin-bottom: 96px; }
 
 .features { display: flex; flex-direction: column; gap: 12px; }
 .feature { position: relative; overflow: hidden; min-height: 320px; display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); border-radius: 24px; background: #e9e9ea; }
@@ -51,9 +50,6 @@
 .art-seg { display: flex; padding: 2px; border-radius: 999px; background: var(--fill); }
 .art-seg span { height: 24px; padding: 0 10px; display: grid; place-items: center; border-radius: 999px; font-size: var(--fs-12); font-weight: var(--fw-medium); color: var(--text-secondary); }
 .art-seg span.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0, 0, 0, .08), 0 0 0 1px rgba(0, 0, 0, .04); }
-.art-slider { position: relative; width: 120px; height: 4px; border-radius: 2px; background: var(--fill-strong); }
-.art-slider span { position: absolute; inset: 0 auto 0 0; border-radius: 2px; background: #9a9a9a; }
-.art-slider i { position: absolute; top: 50%; width: 22px; height: 14px; margin: -7px 0 0 -11px; border-radius: 999px; background: var(--grip); box-shadow: var(--grip-shadow); }
 .art-foot { display: grid; grid-template-columns: 1fr 1.6fr; gap: 8px; margin-top: 10px; }
 .art-button { position: relative; height: 34px; display: grid; place-items: center; border-radius: 999px; background: var(--fill); font-size: var(--fs-13); font-weight: var(--fw-medium); color: var(--text); }
 .art-button.dark { background: var(--ink); color: var(--on-ink); }
@@ -89,30 +85,11 @@
 .art-export { position: absolute; top: 50%; left: 50%; width: 300px; padding: 10px 14px 14px; transform: translate(-50%, -50%) scale(1.25); }
 .art-confetti { position: absolute; left: 50%; top: 50%; width: 6px; height: 10px; margin: -5px -3px; border-radius: 1.5px; }
 
-/* The editor, whole */
-.art-editor { height: 520px; display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 8px; padding: 8px; border-radius: 24px; background: var(--frame); box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 30px 60px -20px rgba(0, 0, 0, .18); }
-.art-sheet { min-width: 0; border-radius: var(--r-lg); background: var(--sheet); box-shadow: var(--sheet-edge); }
-.art-editor-canvas { display: flex; flex-direction: column; }
-.art-editor-bar { height: 52px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 16px; }
-.art-editor-bar b { width: 90px; height: 10px; border-radius: 5px; background: #ececee; }
-.art-editor-actions { margin-left: auto; display: flex; gap: 10px; }
-.art-editor-actions i { width: 22px; height: 22px; border-radius: 7px; background: var(--fill); }
-.art-editor .art-canvas { flex: 1; margin: 0 16px 16px; }
-.art-editor-panel { display: flex; flex-direction: column; padding: 12px; }
-.art-tray-title { padding: 10px 6px 8px; font-size: var(--fs-12); font-weight: var(--fw-medium); color: var(--text-secondary); }
-.art-tray { padding: 4px 12px; border-radius: 14px; background: var(--fill-subtle); box-shadow: inset 0 0 0 1px var(--hairline); }
-.art-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; padding: 8px 0; }
-.art-swatches i { aspect-ratio: 1; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .07); }
-.art-swatches i.on { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--ink); }
-.art-editor-panel .art-foot { margin-top: auto; }
 
 @media (max-width: 760px) {
   .landing { padding: 0 16px; }
   .landing-hero { padding: 40px 0 32px; }
   .landing-hero h1 { font-size: 32px; }
-  .landing-preview { margin-bottom: 56px; }
-  .art-editor { height: 320px; grid-template-columns: 1fr; }
-  .art-editor-panel { display: none; }
   .feature { grid-template-columns: 1fr; min-height: 0; }
   .feature-text { padding: 28px 24px 0; }
   .feature-art { height: 280px; }

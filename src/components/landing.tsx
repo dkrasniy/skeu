@@ -58,8 +58,6 @@ export function Landing() {
         <Link href="/editor" className="button primary">Open editor</Link>
       </header>
 
-      <div className="landing-preview" aria-hidden="true"><EditorArt /></div>
-
       <div className="features">
         {FEATURES.map(feature => <article key={feature.title} className="feature">
           <div className="feature-text">
@@ -91,43 +89,6 @@ function Window({ className = "" }: { className?: string }) {
     <div className="art-window-body">
       <div className="art-side"><b /><b /><b /><b /></div>
       <div className="art-main"><b className="wide" /><b /><b /><b className="short" /><b /></div>
-    </div>
-  </div>;
-}
-
-function Slider({ label, value }: { label: string; value: number }) {
-  return <div className="art-row"><span className="art-label">{label}</span>
-    <span className="art-slider"><span style={{ width: `${value}%` }} /><i style={{ left: `${value}%` }} /></span></div>;
-}
-
-// The whole editor: canvas sheet on the left, the style panel on the right.
-function EditorArt() {
-  return <div className="art-editor">
-    <div className="art-sheet art-editor-canvas">
-      <div className="art-editor-bar"><img src="/logo.svg" alt="" width={20} height={20} /><b /><span className="art-editor-actions"><i /><i /><i /></span></div>
-      <div className="art-canvas"><Window /></div>
-    </div>
-    <div className="art-sheet art-editor-panel">
-      <span className="art-tray-title">Screenshot</span>
-      <div className="art-tray">
-        <div className="art-row"><span className="art-label">Frame</span><span className="art-seg"><span>None</span><span className="on">Light</span><span>Dark</span></span></div>
-        <Slider label="Size" value={62} />
-        <Slider label="Roundness" value={30} />
-        <Slider label="Padding" value={0} />
-        <Slider label="Shadow" value={40} />
-      </div>
-      <span className="art-tray-title">Position</span>
-      <div className="art-tray">
-        <Slider label="Rotate" value={50} />
-      </div>
-      <span className="art-tray-title">Background</span>
-      <div className="art-tray">
-        <div className="art-swatches">
-          {["#b9cafa,#ebd1e6", "#e9cbff,#aba5ef", "#ffe2af,#ff9e9e", "#b2eee7,#9fbbef", "#f5f5bf,#a9e3c4", "#ffe0e6,#f8a5c1"].map((pair, i) =>
-            <i key={pair} className={i === 0 ? "on" : ""} style={{ background: `linear-gradient(135deg, ${pair})` }} />)}
-        </div>
-      </div>
-      <div className="art-foot"><span className="art-button">Copy</span><span className="art-button dark">Download PNG</span></div>
     </div>
   </div>;
 }
