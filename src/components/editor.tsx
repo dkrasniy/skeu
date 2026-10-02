@@ -5,7 +5,7 @@ import { ArrowDown01Icon, ArrowDataTransferHorizontalIcon, Copy01Icon, RedoIcon,
 import { Artboard } from "./artboard";
 import { CropEditor } from "./crop";
 import { ColorChip, Icon, IconButton, Menu, PositionGrid, ResizeHandle, Segmented, Slider, SliderRow, TextSwap, TiltPad } from "./controls";
-import { type Asset, type Settings, anchorOffsets, canvasDimensions, clamp, DEFAULT_SETTINGS, DEMO_ASSET, GRADIENTS, RATIOS, SOLIDS } from "@/lib/editor-state";
+import { type Asset, type Settings, anchorOffsets, canvasDimensions, clamp, DEFAULT_SETTINGS, GRADIENTS, RATIOS, SOLIDS } from "@/lib/editor-state";
 import { loadDocument, saveDocument } from "@/lib/storage";
 import { useHistory } from "@/lib/use-history";
 
@@ -14,6 +14,7 @@ type Scale = "1" | "2" | "3";
 const FORMAT_LABEL: Record<ImageFormat, string> = { png: "PNG", jpeg: "JPG", webp: "WebP" };
 const MAX_PIXELS = 36_000_000;
 const MAX_SIDE = 8192;
+const SHADOW_KEYS = ["shadow", "shadowX", "shadowY", "shadowBlur", "shadowSpread", "shadowColor"] as const satisfies readonly (keyof Settings)[];
 const CONFETTI = ["#6f86ff", "#9b78f2", "#f08bbd", "#ffbd44", "#00c84e", "#ff625a"];
 
 interface Particle { dx: number; apex: number; fall: number; dur: number; delay: number; spin: number; flip: number; r0: number; w: number; h: number; round: boolean; color: string }
@@ -332,7 +333,6 @@ export function Editor() {
             <p className="empty-hint">Drop an image here, or paste one with ⌘V.</p>
             <div className="empty-actions">
               <button type="button" className="button primary" onClick={() => fileInput.current?.click()}>Choose image</button>
-              <button type="button" className="button secondary" onClick={() => setAsset(DEMO_ASSET, "Demo")}>Use demo image</button>
             </div>
           </div>}
         </div>
@@ -357,6 +357,9 @@ export function Editor() {
               </span>
               <Slider label="Shadow strength" value={s.shadow} min={0} max={100} reset={DEFAULT_SETTINGS.shadow} onChange={shadow => change({ shadow })} begin={begin} end={end} />
               <Menu open={menu === "shadow"} onClose={closeMenu} label="Shadow" origin="top-left">
+                <div className="menu-head"><span>Shadow</span>
+                  <button type="button" className="chip-button" disabled={SHADOW_KEYS.every(k => s[k] === DEFAULT_SETTINGS[k])}
+                    onClick={() => change(Object.fromEntries(SHADOW_KEYS.map(k => [k, DEFAULT_SETTINGS[k]])))}>Reset</button></div>
                 {slider("shadowX", "X offset", -100, 100)}
                 {slider("shadowY", "Y offset", -100, 100)}
                 {slider("shadowBlur", "Blur", 0, 200)}

@@ -121,10 +121,13 @@ const ANCHORS = [-1, 0, 1].flatMap(row => [-1, 0, 1].map(col => ({ row, col })))
 const ANCHOR_NAMES = [["top left", "top", "top right"], ["left", "center", "right"], ["bottom left", "bottom", "bottom right"]];
 
 export function PositionGrid({ x, y, reach, onChange }: { x: number; y: number; reach: { x: number; y: number }; onChange: (x: number, y: number) => void }) {
+  // When anchors coincide (no room to move, or no image yet), the center dot wins.
+  const matches = ANCHORS.flatMap(({ row, col }, i) => Math.abs(x - col * reach.x) < .5 && Math.abs(y - row * reach.y) < .5 ? [i] : []);
+  const selected = matches.includes(4) ? 4 : matches[0];
   return <div className="position-grid" role="group" aria-label="Position">
-    {ANCHORS.map(({ row, col }) => {
+    {ANCHORS.map(({ row, col }, i) => {
       const ax = col * reach.x, ay = row * reach.y;
-      const active = Math.abs(x - ax) < .5 && Math.abs(y - ay) < .5;
+      const active = i === selected;
       return <button type="button" key={`${row}${col}`} className="position-dot" aria-pressed={active} aria-label={`Move to ${ANCHOR_NAMES[row + 1][col + 1]}`}
         title={ANCHOR_NAMES[row + 1][col + 1]} onClick={() => onChange(ax, ay)}><span /></button>;
     })}

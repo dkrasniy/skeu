@@ -100,12 +100,13 @@
 
 /* The artboard is user content: it keeps its own colors in every theme */
 .artboard { position: relative; overflow: hidden; isolation: isolate; }
-.shot { position: absolute; overflow: hidden; cursor: grab; touch-action: none; user-select: none;
-  transition: transform 400ms var(--ease-tilt), left var(--duration-fast) var(--ease-smooth-out), top var(--duration-fast) var(--ease-smooth-out),
+.shot { position: absolute; overflow: hidden; cursor: grab; touch-action: none; user-select: none; scale: 1;
+  transition: transform 400ms var(--ease-tilt), scale var(--duration-fast) var(--ease-smooth-out), left var(--duration-fast) var(--ease-smooth-out), top var(--duration-fast) var(--ease-smooth-out),
     width var(--duration-fast) var(--ease-smooth-out), height var(--duration-fast) var(--ease-smooth-out), margin var(--duration-fast) var(--ease-smooth-out); }
 /* Tilt and rotation glide after the control (pika.style's 400ms curve), even mid-drag; size and position follow directly. */
-.shot.is-adjusting { transition: transform 400ms var(--ease-tilt); }
-.shot.is-dragging { cursor: grabbing; }
+.shot.is-adjusting { transition: transform 400ms var(--ease-tilt), scale var(--duration-fast) var(--ease-smooth-out); }
+/* Picked up: the card lifts slightly while dragged and settles back on release. `scale` composes with the tilt transform. */
+.shot.is-dragging { cursor: grabbing; scale: 1.02; transition: transform 400ms var(--ease-tilt), scale var(--duration-quick) var(--ease-smooth-out); }
 .shot-image { pointer-events: none; }
 .shot-bar { display: flex; align-items: center; background: #f6f6f6; }
 .shot-bar.dark { background: #303137; }
@@ -160,6 +161,7 @@
 /* Slider: a white pill groove with a glossy grip that grows slightly while held. */
 .slider { flex: 0 1 164px; min-width: 0; height: 32px; margin: 0; appearance: none; background: transparent; cursor: grab; }
 .slider:active { cursor: grabbing; }
+.slider:focus-visible { outline-offset: 2px; border-radius: 999px; }
 .slider::-webkit-slider-runnable-track { height: 14px; border-radius: 7px; background: var(--surface); box-shadow: var(--groove); }
 .slider::-moz-range-track { height: 14px; border-radius: 7px; background: var(--surface); box-shadow: var(--groove); }
 .slider::-webkit-slider-thumb { appearance: none; width: 22px; height: 22px; margin-top: -4px; border: 0; border-radius: 7px; background: var(--grip); box-shadow: var(--grip-shadow); transition: transform var(--duration-fast) var(--ease-smooth-out); }
@@ -201,6 +203,7 @@
 .menu.bottom-right { bottom: calc(100% + 8px); right: 0; }
 .menu.top-left { top: calc(100% - 6px); left: 8px; right: 8px; padding: 6px 0; }
 .menu .row { min-height: 44px; padding: 0 14px; border-bottom: 0; }
+.menu-head { height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px 0 14px; color: var(--text-secondary); font-size: var(--fs-13); font-weight: var(--fw-medium); }
 .label-button { display: inline-flex; align-items: center; gap: 4px; margin: 0 -6px; padding: 4px 6px; border: 0; border-radius: var(--r-xs); background: transparent; font: inherit; color: inherit; cursor: pointer; transition: background-color var(--hover); }
 .label-button:hover, .label-button[aria-expanded="true"] { background: var(--fill); }
 .label-button svg { color: var(--text-tertiary); transition: transform var(--duration-fast) var(--ease-smooth-out); }

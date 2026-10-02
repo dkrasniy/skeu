@@ -39,8 +39,6 @@ export const DEFAULT_SETTINGS: Settings = {
   ratio: "4:3", width: 1600, height: 1200,
 };
 
-export const DEMO_ASSET: Asset = { src: "/demo-screenshot.svg", name: "Demo", width: 1200, height: 760, crop: null };
-
 export function visibleRect(asset: Asset): Rect {
   return asset.crop ?? { x: 0, y: 0, width: asset.width, height: asset.height };
 }

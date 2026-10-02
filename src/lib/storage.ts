@@ -1,4 +1,4 @@
-import { type Asset, type EditorDocument, type Rect, DEMO_ASSET, sanitizeSettings } from "./editor-state";
+import { type Asset, type EditorDocument, type Rect, sanitizeSettings } from "./editor-state";
 
 async function database() {
   return new Promise<IDBDatabase>((resolve, reject) => {
@@ -33,7 +33,7 @@ function parseCrop(value: unknown, width: number, height: number): Rect | null {
 function parseAsset(value: unknown): Asset | null {
   if (!value || typeof value !== "object") return null;
   const { src, name, width, height } = value as Record<string, unknown>;
-  if (typeof src !== "string" || !(src.startsWith("data:image/") || src === DEMO_ASSET.src)) return null;
+  if (typeof src !== "string" || !src.startsWith("data:image/")) return null;
   if (typeof width !== "number" || typeof height !== "number" || !(width > 0) || !(height > 0)) return null;
   return { src, name: typeof name === "string" ? name : "Screenshot", width, height, crop: parseCrop((value as Record<string, unknown>).crop, width, height) };
 }
