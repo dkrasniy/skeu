@@ -73,16 +73,24 @@ export function canvasDimensions(s: Settings, asset: Asset | null) {
   return { width, height: Math.round(width * h / w) };
 }
 
-// The screenshot card's size in canvas pixels; `unit` scales fixed sizes with the canvas.
+// The window bar is a fixed share of the card's width, so the frame keeps its proportions at any size.
+const BAR_RATIO = 36 / 960;
+
+// The screenshot card's size in canvas pixels. `unit` scales user settings (padding, roundness) with the canvas;
+// `chrome` scales the window frame (bar, dots) with the card itself.
 export function cardBox(s: Settings, asset: Asset) {
   const { width, height } = canvasDimensions(s, asset);
   const unit = width / 1200;
-  const bar = s.frame === "none" ? 0 : 36 * unit;
   const image = visibleRect(asset);
-  const cardWidth = Math.min(width, (height - bar) * image.width / image.height) * s.size / 100;
+  const ratio = image.width / image.height;
+  const k = s.frame === "none" ? 0 : BAR_RATIO;
+  // At 100% the card fits the canvas including its own bar: w = min(W, (H - k·w)·ratio).
+  const fullWidth = Math.min(width, height * ratio / (1 + k * ratio));
+  const cardWidth = fullWidth * s.size / 100;
+  const bar = k * cardWidth;
   const inset = Math.min(s.inset * unit, cardWidth * .2);
   const cardHeight = (cardWidth - inset * 2) * image.height / image.width + bar + inset * 2;
-  return { width, height, unit, bar, inset, cardWidth, cardHeight };
+  return { width, height, unit, chrome: bar / 36, bar, inset, cardWidth, cardHeight };
 }
 
 // Offsets (in % of the canvas) that put the card against an edge, keeping a small margin.

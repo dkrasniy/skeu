@@ -15,14 +15,14 @@ interface ArtboardProps {
 }
 
 export function Artboard({ settings: s, asset, artboardRef, dragging, adjusting, onPointerDown, onPointerMove, onPointerUp }: ArtboardProps) {
-  const { width, height, unit, bar, inset, cardWidth, cardHeight } = cardBox(s, asset);
-  const dot = { width: 9 * unit, height: 9 * unit };
+  const { width, height, unit, chrome, bar, inset, cardWidth, cardHeight } = cardBox(s, asset);
+  const dot = { width: 9 * chrome, height: 9 * chrome };
   const image = visibleRect(asset);
   const k = (cardWidth - inset * 2) / image.width;
 
   return <div ref={artboardRef} className="artboard" style={{ width, height, background: backgroundCSS(s) }}>
     <div className={`shot ${dragging ? "is-dragging" : ""} ${adjusting ? "is-adjusting" : ""}`}
-      onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}
+      onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onLostPointerCapture={onPointerUp}
       style={{
         width: cardWidth, height: cardHeight,
         left: width / 2 + s.x / 100 * width, top: height / 2 + s.y / 100 * height, marginLeft: -cardWidth / 2, marginTop: -cardHeight / 2,
@@ -30,7 +30,7 @@ export function Artboard({ settings: s, asset, artboardRef, dragging, adjusting,
         boxShadow: s.shadow > 0 ? `${s.shadowX * unit}px ${s.shadowY * unit}px ${s.shadowBlur * unit}px ${s.shadowSpread * unit}px ${hexToRgba(s.shadowColor, s.shadow / 100)}` : "none",
         transform: `perspective(${width * PERSPECTIVE}px) rotateX(${s.tiltX}deg) rotateY(${s.tiltY}deg) rotateZ(${s.rotation}deg)`,
       }}>
-      {s.frame !== "none" && <div className={`shot-bar ${s.frame}`} style={{ height: bar, padding: `0 ${14 * unit}px`, gap: 7 * unit }}>
+      {s.frame !== "none" && <div className={`shot-bar ${s.frame}`} style={{ height: bar, padding: `0 ${14 * chrome}px`, gap: 7 * chrome }}>
         <span style={{ ...dot, background: "#ff625a" }} /><span style={{ ...dot, background: "#ffbd44" }} /><span style={{ ...dot, background: "#00c84e" }} />
       </div>}
       <div style={{ padding: inset, lineHeight: 0 }}>

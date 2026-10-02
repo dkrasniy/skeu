@@ -85,6 +85,7 @@ export function TiltPad({ x, y, onChange, begin, end }: { x: number; y: number; 
   function track(e: ReactPointerEvent<HTMLDivElement>) {
     const g = grab.current;
     if (!g) return;
+    if (!(e.buttons & 1)) { release(); return; }
     // Pointer travel in tilt units, starting from the tilt at grab time.
     const ty = g.y + (e.clientX - g.clientX) / DRAG_RANGE * TILT_MAX;
     const tx = g.x - (e.clientY - g.clientY) / DRAG_RANGE * TILT_MAX;
@@ -93,6 +94,7 @@ export function TiltPad({ x, y, onChange, begin, end }: { x: number; y: number; 
     setOvershoot(Math.max(0, (r - TILT_MAX) / TILT_MAX * DRAG_RANGE));
   }
   function release() {
+    if (!grab.current) return;
     grab.current = null;
     setOvershoot(null);
     end();
@@ -101,7 +103,7 @@ export function TiltPad({ x, y, onChange, begin, end }: { x: number; y: number; 
   return <div className={`tilt-pad ${overshoot !== null ? "is-moving" : ""}`} role="group" tabIndex={0}
     aria-label={`Tilt, ${x}° by ${y}°`} title="Drag to tilt. Arrow keys nudge. Double-click to reset."
     onPointerDown={e => { if (e.button !== 0) return; e.preventDefault(); e.currentTarget.focus(); e.currentTarget.setPointerCapture(e.pointerId); begin(); grab.current = { clientX: e.clientX, clientY: e.clientY, x, y }; setOvershoot(0); }}
-    onPointerMove={track} onPointerUp={release} onPointerCancel={release}
+    onPointerMove={track} onPointerUp={release} onPointerCancel={release} onLostPointerCapture={release}
     onDoubleClick={() => onChange(0, 0)}
     onKeyDown={e => {
       const d = { ArrowUp: [1, 0], ArrowDown: [-1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] }[e.key];
@@ -136,7 +138,7 @@ export function ColorChip({ label, value, onChange, begin, end }: { label: strin
 }
 
 // transitions.dev "Menu dropdown": .is-open to show, .is-closing for the faster exit.
-export function Menu({ open, onClose, label, origin, children }: { open: boolean; onClose: () => void; label: string; origin: "top-left" | "top-right" | "bottom-right"; children: ReactNode }) {
+export function Menu({ open, onClose, label, origin, className = "", children }: { open: boolean; onClose: () => void; label: string; origin: "top-left" | "top-right" | "bottom-right"; className?: string; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const wasOpen = useRef(open);
   const [closing, setClosing] = useState(false);
@@ -164,10 +166,10 @@ export function Menu({ open, onClose, label, origin, children }: { open: boolean
   }, [open]);
 
   return <div ref={ref} role="dialog" aria-label={label} inert={!open} data-origin={origin}
-    className={`menu t-dropdown ${origin} ${open ? "is-open" : closing ? "is-closing" : ""}`}>{children}</div>;
+    className={`menu t-dropdown ${origin} ${className} ${open ? "is-open" : closing ? "is-closing" : ""}`}>{children}</div>;
 }
 
-type HandleEvents = Pick<ComponentProps<"button">, "onPointerDown" | "onPointerMove" | "onPointerUp" | "onKeyDown" | "onKeyUp">;
+type HandleEvents = Pick<ComponentProps<"button">, "onPointerDown" | "onPointerMove" | "onPointerUp" | "onLostPointerCapture" | "onKeyDown" | "onKeyUp">;
 
 // transitions.dev "Tooltip": the bubble is measured and placed while hidden, so only the appear animates.
 export function ResizeHandle({ label, hint, active, ...events }: { label: string; hint: string; active: boolean } & HandleEvents) {

@@ -124,8 +124,8 @@ button,input,textarea,select{font:inherit;color:inherit}
 /* stacked sheet: the page behind + the rising sheet (see tokens.md, Stacked sheet motion) */
 .k-stack{position:relative;flex:1;min-width:0}
 .k-stack>.k-sheet{position:absolute;inset:0}
-.k-sheet--behind{transform-origin:50% 0;transition:transform var(--dur-behind) var(--ease-out);will-change:transform}
-.k-sheet--behind::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none;transition:opacity var(--dur-behind) var(--ease-out)}
+.k-sheet--behind{transform-origin:50% 0;transition:transform var(--dur-behind) var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1));will-change:transform}
+.k-sheet--behind::after{content:"";position:absolute;inset:0;border-radius:inherit;background:#000;opacity:0;pointer-events:none;transition:opacity var(--dur-behind) var(--ease-out, ease-out)}
 .k-sheet--behind.is-covered{transform:scale(.965);pointer-events:none}
 .k-sheet--behind.is-covered::after{opacity:var(--dim)}
 .k-sheet--top{top:14px!important;will-change:transform;box-shadow:var(--sheet-edge),0 -8px 28px rgba(0,0,0,.08);animation:k-sheet-in var(--dur-sheet-in) both}
@@ -145,9 +145,9 @@ button,input,textarea,select{font:inherit;color:inherit}
 .k-tray{background:var(--fill-subtle);border-radius:var(--r-xl);box-shadow:inset 0 0 0 1px var(--hairline);padding:0}
 .k-btn{height:var(--h-control);padding:0 14px;border:0;border-radius:var(--r-control);font-weight:var(--fw-medium);display:inline-flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
 .k-btn--primary{background:var(--primary);color:var(--on-primary)}
-.k-btn--secondary{background:var(--fill);color:var(--text)}
+.k-btn--secondary{background:var(--fill);color:var(--text);transition:background var(--duration-quick, 150ms) var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1))}
 .k-btn--secondary:hover{background:var(--fill-strong)}
-.k-btn--ghost{background:transparent;color:var(--text-secondary)}
+.k-btn--ghost{background:transparent;color:var(--text-secondary);transition:background var(--duration-quick, 150ms) var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1)), color var(--duration-quick, 150ms) var(--ease-smooth-out, cubic-bezier(0.22, 1, 0.36, 1))}
 .k-btn--ghost:hover{background:var(--fill);color:var(--text)}
 .k-btn:disabled{opacity:.4;cursor:default}
 .k-input{width:100%;height:var(--h-input);border:0;border-radius:var(--r-sm);padding:0 10px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--border);outline:0}

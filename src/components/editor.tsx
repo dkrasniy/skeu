@@ -1,6 +1,6 @@
 "use client";
 
-import { type KeyboardEvent as ReactKeyboardEvent, type PointerEvent, useCallback, useEffect, useRef, useState } from "react";
+import { type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowDown01Icon, ArrowDataTransferHorizontalIcon, Copy01Icon, RedoIcon, Tick02Icon, UndoIcon } from "@hugeicons/core-free-icons";
 import { Artboard } from "./artboard";
 import { CropEditor } from "./crop";
@@ -14,6 +14,25 @@ type Scale = "1" | "2" | "3";
 const FORMAT_LABEL: Record<ImageFormat, string> = { png: "PNG", jpeg: "JPG", webp: "WebP" };
 const MAX_PIXELS = 36_000_000;
 const MAX_SIDE = 8192;
+const CONFETTI = ["#6f86ff", "#9b78f2", "#f08bbd", "#ffbd44", "#00c84e", "#ff625a"];
+
+interface Particle { dx: number; apex: number; fall: number; dur: number; delay: number; spin: number; flip: number; r0: number; w: number; h: number; round: boolean; color: string }
+
+// Thrown mostly upward: each piece rises and slows, then falls under gravity while tumbling.
+function confetti(count = 22): Particle[] {
+  const rand = (min: number, max: number) => min + Math.random() * (max - min);
+  return Array.from({ length: count }, (_, i) => {
+    const shape = i % 3;
+    const side = i % 2 ? 1 : -1;
+    return {
+      dx: side * rand(18, 135), apex: -rand(72, 150), fall: rand(30, 90),
+      dur: rand(1050, 1500), delay: rand(0, 60),
+      spin: side * rand(240, 720), flip: rand(360, 1080), r0: rand(0, 360),
+      w: shape === 0 ? rand(3.5, 4.5) : rand(5, 6.5), h: shape === 0 ? rand(8, 11) : rand(5, 6.5), round: shape === 2,
+      color: CONFETTI[i % CONFETTI.length],
+    };
+  });
+}
 
 function Logo() {
   return <img className="logo" src="/logo.svg" alt="" width={24} height={24} />;
@@ -30,6 +49,7 @@ export function Editor() {
   const [scaleChoice, setScaleChoice] = useState<Scale>("2");
   const [exporting, setExporting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [burst, setBurst] = useState<{ id: number; particles: Particle[] } | null>(null);
   const [fit, setFit] = useState(.5);
   const [dragging, setDragging] = useState(false);
   const [dropping, setDropping] = useState(false);
@@ -40,6 +60,7 @@ export function Editor() {
   const fileInput = useRef<HTMLInputElement>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const copiedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const burstTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const importId = useRef(0);
   const drag = useRef<{ clientX: number; clientY: number; x: number; y: number; width: number; height: number } | null>(null);
   const sizing = useRef<{ clientX: number; clientY: number; width: number; height: number; maxWidth: number; maxHeight: number } | null>(null);
@@ -63,7 +84,7 @@ export function Editor() {
       .then(saved => { if (active && saved) restore(saved); })
       .catch(() => { if (active) setSaveFailed(true); })
       .finally(() => { if (active) setReady(true); });
-    return () => { active = false; clearTimeout(toastTimer.current); clearTimeout(copiedTimer.current); };
+    return () => { active = false; clearTimeout(toastTimer.current); clearTimeout(copiedTimer.current); clearTimeout(burstTimer.current); };
   }, [restore]);
 
   useEffect(() => {
@@ -142,6 +163,10 @@ export function Editor() {
 
   const download = useCallback(async () => {
     if (exporting || !doc.asset || cropping) return;
+    // Celebrate on the click itself; rendering a large image can take a moment.
+    setBurst(b => ({ id: (b?.id ?? 0) + 1, particles: confetti() }));
+    clearTimeout(burstTimer.current);
+    burstTimer.current = setTimeout(() => setBurst(null), 1700);
     setExporting(true);
     try {
       const url = URL.createObjectURL(await render(format));
@@ -194,11 +219,13 @@ export function Editor() {
   function moveDrag(e: PointerEvent<HTMLDivElement>) {
     const d = drag.current;
     if (!d) return;
+    if (!(e.buttons & 1)) { endDrag(e); return; }
     const x = clamp(d.x + (e.clientX - d.clientX) / d.width * 100, -50, 50);
     const y = clamp(d.y + (e.clientY - d.clientY) / d.height * 100, -50, 50);
     change({ x: Math.abs(x) < .8 ? 0 : Math.round(x * 10) / 10, y: Math.abs(y) < .8 ? 0 : Math.round(y * 10) / 10 });
   }
   function endDrag(e: PointerEvent<HTMLDivElement>) {
+    if (!drag.current) return;
     if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
     drag.current = null;
     setDragging(false);
@@ -219,11 +246,13 @@ export function Editor() {
   function moveResize(e: PointerEvent<HTMLButtonElement>) {
     const r = sizing.current;
     if (!r) return;
+    if (!(e.buttons & 1)) { endResize(e); return; }
     change({ ratio: "custom",
       width: Math.round(clamp(r.width + 2 * (e.clientX - r.clientX) / fit, 320, Math.max(320, r.maxWidth))),
       height: Math.round(clamp(r.height + 2 * (e.clientY - r.clientY) / fit, 320, Math.max(320, r.maxHeight))) });
   }
   function endResize(e: PointerEvent<HTMLButtonElement>) {
+    if (!sizing.current) return;
     if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
     sizing.current = null;
     setResizing(false);
@@ -295,7 +324,7 @@ export function Editor() {
             </div>
             <div className="resize-corner">
               <ResizeHandle label="Resize canvas" hint="Drag to resize canvas" active={resizing}
-                onPointerDown={startResize} onPointerMove={moveResize} onPointerUp={endResize} onKeyDown={keyResize} onKeyUp={end} />
+                onPointerDown={startResize} onPointerMove={moveResize} onPointerUp={endResize} onLostPointerCapture={endResize} onKeyDown={keyResize} onKeyUp={end} />
             </div>
             {dragging && <div className="guides">{s.x === 0 && <i className="guide vertical" />}{s.y === 0 && <i className="guide horizontal" />}</div>}
           </div> : <div className="empty">
@@ -311,8 +340,9 @@ export function Editor() {
 
       <aside className="sheet panel" aria-label="Style">
         <div className="panel-scroll">
-          <section className="group">
-            <h2 className="group-title">Screenshot</h2>
+          <section className="tray">
+            <div className="tray-head"><h2>Screenshot</h2></div>
+            <div className="tray-card">
             <div className="row"><span className="row-label">Frame</span>
               <Segmented label="Frame" value={s.frame} onChange={frame => change({ frame })} options={[{ value: "none", label: "None" }, { value: "light", label: "Light" }, { value: "dark", label: "Dark" }]} /></div>
             {slider("size", "Size", 20, 150, "%")}
@@ -335,11 +365,13 @@ export function Editor() {
                   <ColorChip label="Shadow color" value={s.shadowColor} onChange={shadowColor => change({ shadowColor })} begin={begin} end={end} /></div>
               </Menu>
             </div>
+            </div>
           </section>
 
-          <section className="group">
-            <div className="group-title"><h2>Position</h2>
-              {moved && <button type="button" className="link group-action" onClick={() => change({ x: 0, y: 0, rotation: 0, tiltX: 0, tiltY: 0 })}>Reset</button>}</div>
+          <section className="tray">
+            <div className="tray-head"><h2>Position</h2>
+              {moved && <button type="button" className="link" onClick={() => change({ x: 0, y: 0, rotation: 0, tiltX: 0, tiltY: 0 })}>Reset</button>}</div>
+            <div className="tray-card">
             {slider("rotation", "Rotate", -180, 180, "°")}
             <div className="row split">
               <div className="cell"><span className="row-label">Tilt
@@ -348,10 +380,12 @@ export function Editor() {
               <div className="cell"><span className="row-label">Position</span>
                 <PositionGrid x={s.x} y={s.y} reach={doc.asset ? anchorOffsets(s, doc.asset) : { x: 0, y: 0 }} onChange={(x, y) => change({ x, y })} /></div>
             </div>
+            </div>
           </section>
 
-          <section className="group">
-            <h2 className="group-title">Background</h2>
+          <section className="tray">
+            <div className="tray-head"><h2>Background</h2></div>
+            <div className="tray-card">
             <div className="row"><span className="row-label">Type</span>
               <Segmented label="Background type" value={s.background} onChange={background => change({ background })} options={[{ value: "gradient", label: "Gradient" }, { value: "solid", label: "Solid" }]} /></div>
             <div className="row swatches">
@@ -371,6 +405,7 @@ export function Editor() {
               </div>
             </div>
             {s.background === "gradient" && slider("angle", "Angle", 0, 360, "°")}
+            </div>
           </section>
         </div>
 
@@ -381,10 +416,16 @@ export function Editor() {
               <span className="t-icon" data-icon="b"><Icon icon={Tick02Icon} /></span>
             </span>Copy
           </button>
-          <div className="anchor split">
+          <div className="anchor split-button">
+            {burst && <span className="confetti" key={burst.id} aria-hidden="true">
+              {burst.particles.map((pt, i) => <i key={i} style={{ "--dx": `${pt.dx}px`, "--apex": `${pt.apex}px`, "--fall": `${pt.fall}px`, "--dur": `${pt.dur}ms`, "--delay": `${pt.delay}ms`,
+                "--spin": `${pt.spin}deg`, "--flip": `${pt.flip}deg`, "--r0": `${pt.r0}deg` } as CSSProperties}>
+                <b><s style={{ width: pt.w, height: pt.h, background: pt.color, borderRadius: pt.round ? "50%" : 1 }} /></b>
+              </i>)}
+            </span>}
             <button type="button" className="button primary split-main" title="Download (⌘S)" disabled={!doc.asset || cropping || exporting} onClick={() => void download()}>Download {FORMAT_LABEL[format]}</button>
-            <button type="button" className="button primary split-toggle" aria-label="Download options" disabled={!doc.asset || cropping} data-menu-trigger aria-expanded={menu === "export"} onClick={() => toggleMenu("export")}><Icon icon={ArrowDown01Icon} size={14} /></button>
-            <Menu open={menu === "export"} onClose={closeMenu} label="Download options" origin="bottom-right">
+            <button type="button" className="button primary split-toggle" aria-label="Download options" disabled={!doc.asset || cropping || exporting} data-menu-trigger aria-expanded={menu === "export"} onClick={() => toggleMenu("export")}><Icon icon={ArrowDown01Icon} size={14} /></button>
+            <Menu open={menu === "export"} onClose={closeMenu} label="Download options" origin="bottom-right" className="export-menu">
               <div className="row"><span className="row-label">Format</span>
                 <Segmented label="Format" value={format} onChange={setFormat} options={[{ value: "png", label: "PNG" }, { value: "jpeg", label: "JPG" }, { value: "webp", label: "WebP" }]} /></div>
               <div className="row"><span className="row-label">Scale</span>

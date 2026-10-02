@@ -46,6 +46,7 @@ export function CropEditor({ asset, onApply, onCancel }: { asset: Asset; onApply
   function move(e: PointerEvent<HTMLElement>) {
     const d = drag.current;
     if (!d || !scale) return;
+    if (!(e.buttons & 1)) { drag.current = null; return; }
     const dx = (e.clientX - d.clientX) / scale, dy = (e.clientY - d.clientY) / scale;
     const s = d.start;
     let { x, y, width, height } = s;
@@ -67,7 +68,7 @@ export function CropEditor({ asset, onApply, onCancel }: { asset: Asset; onApply
         <img src={asset.src} alt={asset.name} draggable={false} />
         <div className="crop-shade"><i style={{ left: rect.x * scale, top: rect.y * scale, width: rect.width * scale, height: rect.height * scale }} /></div>
         <div className="crop-rect" style={{ left: rect.x * scale, top: rect.y * scale, width: rect.width * scale, height: rect.height * scale }}
-          onPointerDown={e => grab("move", e)} onPointerMove={move} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }}>
+          onPointerDown={e => grab("move", e)} onPointerMove={move} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onLostPointerCapture={() => { drag.current = null; }}>
           <i className="crop-thirds" />
           {EDGES.map(edge => <span key={edge} className={`crop-handle ${edge}`} onPointerDown={e => grab(edge, e)} />)}
         </div>
