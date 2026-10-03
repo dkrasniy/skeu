@@ -1,6 +1,6 @@
 # Skeu
 
-> Skeu (https://skeu.app) puts a screenshot in a window frame, on a background, with a soft shadow, for launch posts, docs, product pages and slides. It runs in the browser; images are never uploaded, and there's no account.
+> Skeu is a free screenshot editor that runs in the browser at https://skeu.app. It turns a plain screenshot into a polished image for docs, social posts, product pages and slides. There's no account and no watermark, and images are never uploaded.
 
 ## What it does
 
