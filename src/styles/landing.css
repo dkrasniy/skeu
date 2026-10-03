@@ -25,7 +25,8 @@
 .faq dd { margin: 6px 0 0; font-size: var(--fs-14); line-height: 1.6; color: var(--text-secondary); }
 
 .landing-foot { margin-top: 72px; height: 72px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--hairline); color: var(--text-tertiary); }
-.landing-foot a:hover { color: var(--text); }
+.landing-foot-link { display: inline-flex; align-items: center; gap: 2px; transition: color var(--hover); }
+.landing-foot-link:hover { color: var(--text); }
 
 /* ── drawings ── */
 .art-canvas { display: grid; place-items: center; border-radius: 14px; background: linear-gradient(135deg, #b9cafa, #ebd1e6); }

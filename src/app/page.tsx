@@ -5,12 +5,12 @@ const appData = {
   "@type": "WebApplication",
   name: "Skeu",
   url: "https://skeu.app",
-  description: "A free screenshot editor that runs in the browser. Add a window frame, shadow, 3D tilt and background, crop, and export a PNG, JPG or WebP.",
+  description: "A screenshot editor for launch posts, docs and slides: a window frame, background, shadow and 3D tilt, then PNG, JPG or WebP.",
   applicationCategory: "DesignApplication",
   operatingSystem: "Any",
   browserRequirements: "Requires a modern web browser",
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-  featureList: ["Light and dark window frames", "Adjustable shadows", "3D tilt and rotation", "Gradient and solid backgrounds", "Crop with edge snapping", "PNG, JPG and WebP export at up to 3×", "Copy to clipboard", "No signup, nothing uploaded"],
+  featureList: ["Light and dark window frames", "Adjustable shadows", "3D tilt and rotation", "Gradient and solid backgrounds", "Crop with edge snapping", "PNG, JPG and WebP export at up to 3×", "Copy to clipboard"],
 };
 
 const faqData = {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Arrow, Button } from "@/components/button";
 import { HOME_HREF } from "@/lib/returning";
 import "@/styles/landing.css";
 
@@ -41,14 +42,14 @@ export function Landing() {
   return <div className="landing">
     <nav className="landing-nav">
       <Link href={HOME_HREF} className="landing-brand"><img src="/logo.svg" alt="" width={24} height={24} />Skeu</Link>
-      <Link href="/editor" className="button primary">Open editor</Link>
+      <Button href="/editor" variant="primary" size="large" arrow>Open editor</Button>
     </nav>
 
     <main>
       <header className="landing-hero">
-        <h1>Skeu is a free screenshot editor</h1>
-        <p>Drop in a screenshot and give it a window frame, a shadow and a background in seconds. It runs in your browser: there’s no account, and nothing is uploaded.</p>
-        <Link href="/editor" className="button primary">Open editor</Link>
+        <h1>Make beautiful screenshots</h1>
+        <p>Drop in a screenshot, choose a frame, a background and a shadow, and copy or download it for a post, a doc or a slide. It all happens in your browser.</p>
+        <Button href="/editor" variant="primary" size="large" arrow>Open editor</Button>
       </header>
 
       <div className="features">
@@ -71,7 +72,7 @@ export function Landing() {
 
     <footer className="landing-foot">
       <span>© 2026 Skeu</span>
-      <Link href="/editor">Open editor</Link>
+      <Link href="/editor" className="landing-foot-link t-learn">Open editor<Arrow /></Link>
     </footer>
   </div>;
 }

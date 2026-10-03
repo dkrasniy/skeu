@@ -35,6 +35,8 @@
 .button.ghost { background: transparent; color: var(--text-secondary); }
 .button.ghost:hover, .button.ghost[aria-expanded="true"] { background: var(--fill); color: var(--text); }
 .button .t-icon { display: grid; }
+.button.large { height: 40px; padding: 0 18px; }
+.button.t-learn { padding-right: 12px; gap: 4px; }
 .button:disabled, .icon-button:disabled { opacity: .4; cursor: default; }
 .icon-button { width: var(--h-control); height: var(--h-control); display: inline-grid; place-items: center; flex: none; border: 0; border-radius: var(--r-control); background: transparent; color: var(--text-secondary); cursor: pointer; transition: background-color var(--hover), color var(--hover); }
 .icon-button:not(:disabled):hover { background: var(--fill); color: var(--text); }
@@ -180,6 +182,9 @@
 .tilt-pad.is-moving { cursor: grabbing; }
 .tilt-knob { width: 22px; height: 22px; border-radius: 50%; background: var(--knob); box-shadow: var(--grip-shadow); pointer-events: none; transition: transform var(--duration-fast) var(--ease-smooth-out); }
 .tilt-pad.is-moving .tilt-knob { transition: none; }
+/* Lights up just outside the rim on the side the tilt snapped to. */
+.tilt-snap { position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; margin: -2.5px; border-radius: 50%; background: var(--accent); pointer-events: none; opacity: 0; scale: .3; transition: opacity var(--duration-fast) var(--ease-smooth-out), scale var(--duration-fast) var(--ease-smooth-out); }
+.tilt-snap.is-on { opacity: 1; scale: 1; }
 
 .chip-button { height: 22px; padding: 0 7px; border: 0; border-radius: var(--r-xs); background: var(--fill); color: var(--text-secondary); font-size: var(--fs-12); font-weight: var(--fw-medium); cursor: pointer; transition: background-color var(--hover), color var(--hover), opacity var(--hover); }
 .chip-button:not(:disabled):hover { background: var(--fill-strong); color: var(--text); }
