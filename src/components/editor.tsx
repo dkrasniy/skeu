@@ -8,13 +8,13 @@ import { ColorChip, Icon, IconButton, Menu, PositionGrid, ResizeHandle, Segmente
 import { type Asset, type Settings, anchorOffsets, canvasDimensions, clamp, DEFAULT_SETTINGS, GRADIENTS, INITIAL_DOCUMENT, RATIOS, SOLIDS } from "@/lib/editor-state";
 import { clearSavedDocument, loadStyle, saveStyle } from "@/lib/storage";
 import { HOME_HREF, rememberEditor } from "@/lib/returning";
+import { renderImage } from "@/lib/render";
+import { fitImage, MAX_SIDE } from "@/lib/image";
 import { useHistory } from "@/lib/use-history";
 
 type ImageFormat = "png" | "jpeg" | "webp";
 type Scale = "1" | "2" | "3";
 const FORMAT_LABEL: Record<ImageFormat, string> = { png: "PNG", jpeg: "JPG", webp: "WebP" };
-const MAX_PIXELS = 36_000_000;
-const MAX_SIDE = 8192;
 const SHADOW_KEYS = ["shadow", "shadowX", "shadowY", "shadowBlur", "shadowSpread", "shadowColor"] as const satisfies readonly (keyof Settings)[];
 // Each panel tray resets its own settings; canvas size lives in the size menu and is left alone.
 const SCREENSHOT_KEYS = ["frame", "size", "radius", "inset", ...SHADOW_KEYS] as const satisfies readonly (keyof Settings)[];
@@ -77,8 +77,8 @@ export function Editor() {
   const wheelTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const dims = canvasDimensions(s, doc.asset);
-  const fits = (n: number) => dims.width * dims.height * n * n <= MAX_PIXELS && Math.max(dims.width, dims.height) * n <= MAX_SIDE;
-  const exportScale = [Number(scaleChoice), 2, 1].find(fits) ?? 1;
+  // A scale that would pass MAX_SIDE is scaled back to land on it, so 3× of a big canvas still comes out as large as allowed.
+  const exportScale = Math.min(Number(scaleChoice), MAX_SIDE / Math.max(dims.width, dims.height));
 
   const notify = useCallback((text: string, undoable = false) => {
     setToast({ text, open: true, undoable });
@@ -146,7 +146,9 @@ export function Editor() {
       if (id !== importId.current) return;
       if (image.naturalWidth * image.naturalHeight > 60_000_000) { notify("This image is over 60 megapixels. Choose a smaller one."); return; }
       const name = file.name.replace(/\.[^.]+$/, "");
-      setAsset({ src, name, width: image.naturalWidth, height: image.naturalHeight, crop: null }, name);
+      const fitted = await fitImage(image);
+      if (id !== importId.current) return;
+      setAsset({ src, name, width: image.naturalWidth, height: image.naturalHeight, crop: null, ...fitted }, name);
     } catch { notify("This image couldn’t be opened. Try a PNG or JPG."); }
   }, [notify, setAsset]);
 
@@ -159,21 +161,12 @@ export function Editor() {
     return () => window.removeEventListener("paste", paste);
   }, [importFile]);
 
+  // The background is always opaque, so JPEG needs no matte.
   const render = useCallback(async (type: ImageFormat) => {
-    const node = artboard.current;
-    if (!node) throw new Error("Nothing to export");
-    await Promise.all(Array.from(node.querySelectorAll("img")).map(img => img.decode()));
-    const { toCanvas } = await import("html-to-image");
-    const canvas = await toCanvas(node, { width: dims.width, height: dims.height, pixelRatio: exportScale, skipFonts: true, cacheBust: false });
-    if (type === "jpeg") {
-      const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("Canvas is unavailable");
-      ctx.globalCompositeOperation = "destination-over";
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
+    if (!doc.asset) throw new Error("Nothing to export");
+    const canvas = await renderImage(s, doc.asset, exportScale);
     return new Promise<Blob>((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error("Export failed")), `image/${type}`, .96));
-  }, [dims.width, dims.height, exportScale]);
+  }, [s, doc.asset, exportScale]);
 
   const download = useCallback(async () => {
     if (exporting || !doc.asset || cropping) return;
@@ -527,8 +520,8 @@ export function Editor() {
               <div className="row"><span className="row-label">Format</span>
                 <Segmented label="Format" value={format} onChange={setFormat} options={[{ value: "png", label: "PNG" }, { value: "jpeg", label: "JPG" }, { value: "webp", label: "WebP" }]} /></div>
               <div className="row"><span className="row-label">Scale</span>
-                <Segmented label="Scale" value={String(exportScale) as Scale} onChange={setScaleChoice} options={[{ value: "1", label: "1×" }, { value: "2", label: "2×" }, { value: "3", label: "3×" }]} /></div>
-              <p className="menu-meta num">{dims.width * exportScale} × {dims.height * exportScale} px</p>
+                <Segmented label="Scale" value={scaleChoice} onChange={setScaleChoice} options={[{ value: "1", label: "1×" }, { value: "2", label: "2×" }, { value: "3", label: "3×" }]} /></div>
+              <p className="menu-meta num">{Math.round(dims.width * exportScale)} × {Math.round(dims.height * exportScale)} px</p>
             </Menu>
           </div>
         </footer>
