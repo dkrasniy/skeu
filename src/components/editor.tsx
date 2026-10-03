@@ -4,6 +4,7 @@ import { type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type Poin
 import { ArrowDown01Icon, ArrowDataTransferHorizontalIcon, Copy01Icon, Delete02Icon, RedoIcon, Tick02Icon, UndoIcon } from "@hugeicons/core-free-icons";
 import { Artboard } from "./artboard";
 import { CropEditor } from "./crop";
+import { MorphText } from "./morph-text";
 import { ColorChip, Icon, IconButton, Menu, PositionGrid, ResizeHandle, Segmented, Slider, SliderRow, TiltPad } from "./controls";
 import { type Asset, type Settings, anchorOffsets, canvasDimensions, clamp, DEFAULT_SETTINGS, GRADIENTS, INITIAL_DOCUMENT, RATIOS, SOLIDS } from "@/lib/editor-state";
 import { clearSavedDocument, loadStyle, saveStyle } from "@/lib/storage";
@@ -14,6 +15,7 @@ import { useHistory } from "@/lib/use-history";
 
 type ImageFormat = "png" | "jpeg" | "webp";
 type Scale = "1" | "2" | "3";
+
 const FORMAT_LABEL: Record<ImageFormat, string> = { png: "PNG", jpeg: "JPG", webp: "WebP" };
 const SHADOW_KEYS = ["shadow", "shadowX", "shadowY", "shadowBlur", "shadowSpread", "shadowColor"] as const satisfies readonly (keyof Settings)[];
 // Each panel tray resets its own settings; canvas size lives in the size menu and is left alone.
@@ -358,6 +360,11 @@ export function Editor() {
 
   const slider = (key: "size" | "radius" | "inset" | "rotation" | "tiltX" | "tiltY" | "angle" | "shadowX" | "shadowY" | "shadowBlur" | "shadowSpread", label: string, min: number, max: number, unit = "") =>
     <SliderRow label={label} value={s[key]} min={min} max={max} unit={unit} reset={DEFAULT_SETTINGS[key]} onChange={n => change({ [key]: n })} begin={begin} end={end} />;
+  const gradient = s.background === "gradient";
+  // Swatches are keyed by position, so switching palettes recolors the same buttons (and the colors can fade).
+  const swatch = (i: number, name: string, color1: string, color2: string, pick: Partial<Settings>) =>
+    <button type="button" key={i} className="swatch" title={name} aria-label={name}
+      aria-pressed={s.color1 === color1 && (!gradient || s.color2 === color2)} style={{ "--swatch-1": color1, "--swatch-2": color2 } as CSSProperties} onClick={() => change(pick)} />;
   const ratioLabel = s.ratio === "custom" ? `${dims.width} × ${dims.height}` : RATIOS.find(r => r.value === s.ratio)?.label;
 
   return <div className={`app ${dropping ? "is-dropping" : ""}`}
@@ -476,26 +483,31 @@ export function Editor() {
           <section className="tray">
             <div className="tray-head"><h2>Background</h2>
               {!isDefault(s, BACKGROUND_KEYS) && <button type="button" className="link" onClick={() => change(defaults(BACKGROUND_KEYS))}>Reset</button>}</div>
-            <div className="tray-card">
+            {/* Gradient ↔ Solid: the first two rows of swatches stay put and fade between palettes; the third row,
+                the end color and the angle open and close like the transitions.dev accordion. */}
+            <div className="tray-card t-acc" data-open={gradient}>
             <div className="row"><span className="row-label">Type</span>
               <Segmented label="Background type" value={s.background} onChange={background => change({ background })} options={[{ value: "gradient", label: "Gradient" }, { value: "solid", label: "Solid" }]} /></div>
             <div className="row swatches">
-              {s.background === "gradient"
-                ? GRADIENTS.map(([name, color1, color2]) => <button type="button" key={name} className="swatch" title={name} aria-label={name}
-                    aria-pressed={s.color1 === color1 && s.color2 === color2} style={{ background: `linear-gradient(135deg, ${color1}, ${color2})` }} onClick={() => change({ color1, color2 })} />)
-                : SOLIDS.map(color => <button type="button" key={color} className="swatch" title={color} aria-label={color}
-                    aria-pressed={s.color1 === color} style={{ background: color }} onClick={() => change({ color1: color })} />)}
+              <div className="swatch-grid">
+                {gradient
+                  ? GRADIENTS.slice(0, SOLIDS.length).map(([name, color1, color2], i) => swatch(i, name, color1, color2, { color1, color2 }))
+                  : SOLIDS.map((color, i) => swatch(i, color, color, color, { color1: color }))}
+              </div>
+              <div className="t-acc-panel" inert={!gradient}><div className="t-acc-panel-inner">
+                <div className="swatch-grid">{GRADIENTS.slice(SOLIDS.length).map(([name, color1, color2], i) => swatch(SOLIDS.length + i, name, color1, color2, { color1, color2 }))}</div>
+              </div></div>
             </div>
-            <div className="row"><span className="row-label">{s.background === "gradient" ? "Colors" : "Color"}</span>
+            <div className="row background-colors"><span className="row-label">{gradient ? "Colors" : "Color"}</span>
               <div className="chips">
-                <ColorChip label={s.background === "gradient" ? "Start color" : "Color"} value={s.color1} onChange={color1 => change({ color1 })} begin={begin} end={end} />
-                {s.background === "gradient" && <>
+                <ColorChip label={gradient ? "Start color" : "Color"} value={s.color1} onChange={color1 => change({ color1 })} begin={begin} end={end} />
+                <div className="t-acc-panel chips-more" inert={!gradient}><div className="t-acc-panel-inner"><div className="chips">
                   <ColorChip label="End color" value={s.color2} onChange={color2 => change({ color2 })} begin={begin} end={end} />
                   <IconButton label="Swap colors" icon={ArrowDataTransferHorizontalIcon} onClick={() => change({ color1: s.color2, color2: s.color1 })} />
-                </>}
+                </div></div></div>
               </div>
             </div>
-            {s.background === "gradient" && slider("angle", "Angle", 0, 360, "°")}
+            <div className="t-acc-panel background-angle" inert={!gradient}><div className="t-acc-panel-inner">{slider("angle", "Angle", 0, 360, "°")}</div></div>
             </div>
           </section>
         </div>
@@ -514,7 +526,7 @@ export function Editor() {
                 <b><s style={{ width: pt.w, height: pt.h, background: pt.color, borderRadius: pt.round ? "50%" : 1 }} /></b>
               </i>)}
             </span>}
-            <button type="button" className="button primary split-main" title="Download (⌘S)" disabled={!doc.asset || cropping || exporting} onClick={() => void download()}>Download {FORMAT_LABEL[format]}</button>
+            <button type="button" className="button primary split-main" title="Download (⌘S)" disabled={!doc.asset || cropping || exporting} onClick={() => void download()}><MorphText text={`Download ${FORMAT_LABEL[format]}`} /></button>
             <button type="button" className="button primary split-toggle" aria-label="Download options" disabled={!doc.asset || cropping || exporting} data-menu-trigger aria-expanded={menu === "export"} onClick={() => toggleMenu("export")}><Icon icon={ArrowDown01Icon} size={14} /></button>
             <Menu open={menu === "export"} onClose={closeMenu} label="Download options" origin="bottom-right" className="export-menu">
               <div className="row"><span className="row-label">Format</span>

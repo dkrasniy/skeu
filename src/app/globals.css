@@ -35,6 +35,10 @@
 .button.ghost { background: transparent; color: var(--text-secondary); }
 .button.ghost:hover, .button.ghost[aria-expanded="true"] { background: var(--fill); color: var(--text); }
 .button .t-icon { display: grid; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.morph-text-chars { position: relative; white-space: pre; }
+.morph-text-chars > span { display: inline-block; }
+.morph-text-chars > [data-exit] { position: absolute; top: 0; }
 .button.large { height: 40px; padding: 0 18px; }
 .button.t-learn { padding-right: 12px; gap: 4px; }
 .button:disabled, .icon-button:disabled { opacity: .4; cursor: default; }
@@ -195,10 +199,26 @@
 .position-dot:hover span { background: var(--text-tertiary); }
 .position-dot[aria-pressed="true"] span { width: 8px; height: 8px; background: var(--knob); box-shadow: 0 0 0 1px #1a1a1a; }
 
-.row.swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; padding: 14px; }
-.swatch { aspect-ratio: 1; padding: 0; border: 0; border-radius: var(--r-sm); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .07); cursor: pointer; transition: box-shadow var(--hover); }
-.swatch[aria-pressed="true"] { box-shadow: inset 0 0 0 1.5px var(--text), inset 0 0 0 3.5px var(--surface); }
+.row.swatches { display: block; padding: 14px; }
+.swatch-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+/* Room for the selected ring, which sits outside the tile, without changing the row's size. */
+.swatches .t-acc-panel-inner { margin: 0 -4px -4px; padding: 0 4px 4px; }
+.swatches .t-acc-panel-inner > .swatch-grid { padding-top: 8px; }
+/* Registered so the two stops can fade when a swatch switches palette (gradients themselves don't interpolate). */
+@property --swatch-1 { syntax: "<color>"; inherits: false; initial-value: transparent; }
+@property --swatch-2 { syntax: "<color>"; inherits: false; initial-value: transparent; }
+.swatch { aspect-ratio: 1; padding: 0; border: 0; border-radius: var(--r-sm); background: linear-gradient(135deg, var(--swatch-1), var(--swatch-2)); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .07), 0 0 0 0 var(--surface), 0 0 0 0 color-mix(in srgb, var(--text-tertiary) 45%, var(--surface)); cursor: pointer; transition: box-shadow var(--hover); }
+/* Selected: a quiet grey ring outside the tile, so the whole color stays visible. It opens outward from the edge. */
+.swatch[aria-pressed="true"] { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .07), 0 0 0 2px var(--surface), 0 0 0 3.5px color-mix(in srgb, var(--text-tertiary) 45%, var(--surface)); }
 .chips { display: flex; align-items: center; gap: 6px; }
+/* The end color and swap button: the accordion turned on its side, so the start color slides over as they go. */
+.t-acc .chips-more { grid-template-rows: 1fr; grid-template-columns: 0fr; transition-property: grid-template-columns; }
+.t-acc[data-open="true"] .chips-more { grid-template-columns: 1fr; transition-property: grid-template-columns; }
+.chips-more .chips { padding-left: 6px; }
+.background-colors > .chips { gap: 0; }
+/* The angle row brings its own divider, so it folds away with the row. */
+.tray-card .background-colors { border-bottom: 0; }
+.background-angle .row { border-top: 1px solid var(--hairline); border-bottom: 0; }
 .color-chip { position: relative; width: 24px; height: 24px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .1); cursor: pointer; }
 .color-chip:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 .color-chip input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
@@ -235,7 +255,8 @@
 
 /* Press feedback: controls dip slightly while held and ease back on release. Split buttons press as one piece. */
 .button, .icon-button, .chip-button, .label-button { transition: background-color var(--hover), color var(--hover), opacity var(--hover), transform var(--duration-quick) var(--ease-smooth-out); }
-.swatch { transition: box-shadow var(--hover), transform var(--duration-quick) var(--ease-smooth-out); }
+.swatch { transition: box-shadow var(--duration-quick) var(--ease-smooth-out), transform var(--duration-quick) var(--ease-smooth-out), --swatch-1 var(--acc-expand) var(--acc-ease), --swatch-2 var(--acc-expand) var(--acc-ease); }
+@media (prefers-reduced-motion: reduce) { .swatch { transition: none; } }
 .split-button { transition: transform var(--duration-quick) var(--ease-smooth-out); }
 :is(.button, .icon-button, .chip-button, .label-button, .swatch):not(:disabled):active { transform: scale(.97); }
 .split-button .button:active { transform: none; }
