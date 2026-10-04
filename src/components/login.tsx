@@ -4,7 +4,7 @@ import { type ReactNode, useCallback, useLayoutEffect, useRef, useState } from "
 import { ArrowLeft01Icon, GoogleIcon, Mail01Icon } from "@hugeicons/core-free-icons";
 import { Icon } from "./controls";
 import { Button } from "./button";
-import { Dialog, fitTo } from "./dialog";
+import { Dialog, fitTo, touch } from "./dialog";
 import { Field } from "./field";
 
 // A test login flow (nothing is sent anywhere; not shown in the app yet), built to try Family ConnectKit's nested-page transition:
@@ -45,7 +45,7 @@ export function LoginDialog({ open, onClose }: { open: boolean; onClose: () => v
     const content = b?.querySelector<HTMLElement>(`[data-page="${page}"]`);
     if (!b || !content) return;
     // No scrolling: the box is still the old page's size, so the browser would scroll it to reach the control.
-    if (leaving) content.querySelector<HTMLElement>("[data-autofocus]")?.focus({ preventScroll: true });
+    if (leaving && !touch()) content.querySelector<HTMLElement>("[data-autofocus]")?.focus({ preventScroll: true });
     return fitTo(b, content, true);
   }, [page, leaving]);
 

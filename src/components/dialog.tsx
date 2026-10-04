@@ -6,7 +6,8 @@ import { cssDuration, Icon } from "./controls";
 
 // The one dialog: a native <dialog> (top layer, focus kept inside) that opens and closes like the transitions.dev
 // modal. Escape, the close button and a click outside all close it. `onClosed` runs once it has gone, to reset
-// what's inside. On open, focus goes to the element marked data-autofocus.
+// what's inside. On open, focus goes to the element marked data-autofocus, except on touch screens, where there's no
+// keyboard to move it and a ring would only look like a stray selection: there the dialog itself takes focus.
 export function Dialog({ open, onClose, onClosed, labelledBy, className = "", onKeyDown, children }: {
   open: boolean;
   onClose: () => void;
@@ -29,7 +30,8 @@ export function Dialog({ open, onClose, onClosed, labelledBy, className = "", on
       d.classList.remove("is-closing");
       void d.offsetWidth;
       d.classList.add("is-open");
-      d.querySelector<HTMLElement>("[data-autofocus]")?.focus({ preventScroll: true });
+      const start = touch() ? d : d.querySelector<HTMLElement>("[data-autofocus]") ?? d;
+      start.focus({ preventScroll: true });
       return;
     }
     if (!d.open) return;
@@ -39,7 +41,7 @@ export function Dialog({ open, onClose, onClosed, labelledBy, className = "", on
     return () => clearTimeout(timer);
   }, [open]);
 
-  return <dialog ref={ref} className={`dialog t-modal ${className}`} aria-labelledby={labelledBy}
+  return <dialog ref={ref} className={`dialog t-modal ${className}`} aria-labelledby={labelledBy} tabIndex={-1}
     onCancel={e => { e.preventDefault(); onClose(); }}
     onClose={() => { if (open) onClose(); }}
     onClick={e => { if (e.target === e.currentTarget) onClose(); }}
@@ -67,3 +69,6 @@ export function fitTo(box: HTMLElement, content: HTMLElement, width = false) {
   observer.observe(content);
   return () => observer.disconnect();
 }
+
+// Touch screens: there's no keyboard to move focus, so nothing gets focused (and ringed) on its own.
+export const touch = () => matchMedia("(pointer: coarse)").matches;

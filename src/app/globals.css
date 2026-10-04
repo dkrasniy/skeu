@@ -320,7 +320,7 @@
 
 /* Dialogs share one shell: the native <dialog> is the transitions.dev modal, the box inside holds the content.
    Boxes that resize clip with overflow: clip, never hidden, so focusing a control can't scroll their content. */
-.dialog { max-width: none; max-height: none; padding: 0; border: 0; background: transparent; color: inherit; overflow: visible; }
+.dialog { max-width: none; max-height: none; padding: 0; border: 0; background: transparent; color: inherit; overflow: visible; outline: none; }
 .dialog::backdrop { background: rgb(20 20 24 / 0); transition: background var(--modal-open-dur) var(--modal-ease); }
 .dialog.is-open::backdrop { background: rgb(20 20 24 / .32); }
 .dialog.is-closing::backdrop { transition-duration: var(--modal-close-dur); }
