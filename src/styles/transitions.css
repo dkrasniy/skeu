@@ -406,54 +406,6 @@
 }
 
 
-/* ── 08-page-side-by-side ── */
-/* Deviation: the recipe has two pages keyed 1 and 2. Here any number of pages carry data-pos: pages before the
-   current one wait on the left, pages after it on the right, so forward slides left and back slides right. */
-:root {
-  --page-slide-dur: 250ms;
-  --page-fade-dur: 250ms;
-  --page-slide-distance: 8px;
-  --page-blur: 3px;
-  --page-stagger: 0ms;
-  --page-exit-enabled: 1;
-  --page-slide-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --page-fade-ease: cubic-bezier(0.22, 1, 0.36, 1);
-}
-.t-page-slide {
-  position: relative;
-}
-.t-page-slide .t-page[data-pos="before"] {
-  --t-page-from-x: calc(var(--page-slide-distance) * -1);
-}
-.t-page-slide .t-page[data-pos="after"] {
-  --t-page-from-x: var(--page-slide-distance);
-}
-.t-page-slide .t-page {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(calc(var(--t-page-from-x, 0px) * var(--page-exit-enabled)));
-  filter: blur(calc(var(--page-blur) * var(--page-exit-enabled)));
-  transition:
-    opacity   var(--page-fade-dur)  var(--page-fade-ease),
-    transform var(--page-slide-dur) var(--page-slide-ease),
-    filter    var(--page-slide-dur) var(--page-slide-ease);
-  will-change: opacity, transform, filter;
-}
-.t-page-slide .t-page[data-pos="current"] {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateX(0);
-  filter: blur(0);
-  transition-delay: var(--page-stagger);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .t-page-slide .t-page { transition: none !important; }
-}
-
-
 /* ── 01-card-resize ── */
 :root {
   --resize-dur: 300ms;

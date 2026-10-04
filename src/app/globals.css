@@ -295,7 +295,6 @@
   .panel-footer { position: sticky; bottom: 0; z-index: 10; margin: 4px -12px 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--frame); border-top: 1px solid var(--hairline); }
 }
 
-/* How it works: a dialog of slides. The box resizes to each slide; the close button, dots and footer stay put. */
 /* Dialogs share one shell: the native <dialog> is the transitions.dev modal, the box inside holds the content.
    Boxes that resize clip with overflow: clip, never hidden, so focusing a control can't scroll their content. */
 .dialog { max-width: none; max-height: none; padding: 0; border: 0; background: transparent; color: inherit; overflow: visible; }
@@ -306,32 +305,69 @@
 .dialog-close { position: absolute; top: 14px; right: 14px; z-index: 1; }
 @media (prefers-reduced-motion: reduce) { .dialog::backdrop { transition: none; } }
 
-/* How it works: a dialog of slides. The box resizes to each slide; the close button, dots and footer stay put. */
-.how { width: min(400px, calc(100vw - 32px)); }
-.how-slides { --resize-dur: 250ms; overflow: clip; }
-.how-slides .how-slide { inset: 0 0 auto; padding-bottom: 4px; }
-.how-slide:not(:has(.how-art)) { padding-top: 18px; }
-.how-slide h2 { margin: 0 52px 0 14px; font: var(--type-title); letter-spacing: var(--type-title-ls); color: var(--ink); }
-.how-slide p { margin: 4px 14px 0; font: var(--type-body); letter-spacing: var(--type-body-ls); color: var(--text-secondary); }
-.how-list { margin: 14px 14px 0; }
-.how-list div { height: 40px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--hairline); }
-.how-list dt { font: var(--type-body); font-weight: var(--fw-medium); letter-spacing: var(--type-body-ls); color: var(--text); }
-.how-list dd { margin: 0; display: flex; gap: 4px; font: var(--type-body); letter-spacing: var(--type-body-ls); color: var(--text-secondary); }
-.how-list kbd { min-width: 20px; height: 20px; padding: 0 6px; display: inline-grid; place-items: center; border-radius: 6px; background: var(--fill); box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .06); font: inherit; font-size: var(--fs-12); font-weight: var(--fw-medium); color: var(--text-secondary); }
-.how-foot { display: flex; align-items: center; justify-content: space-between; padding: 14px 6px 6px; }
-.how-back { transition: opacity var(--duration-quick) var(--ease-smooth-out), background-color var(--hover); }
-.how-back:disabled { opacity: 0; }
-.how-next { min-width: 84px; }
-.how-dots { display: flex; gap: 6px; }
-.how-dots i { width: 6px; height: 6px; border-radius: 3px; background: var(--fill-strong); transition: width var(--page-slide-dur) var(--page-slide-ease), background-color var(--page-slide-dur) var(--page-slide-ease); }
+/* How it works: one scene for all four steps (the screenshot is the hub; pieces move by data-step), text that
+   dissolves while its box eases to each step's height, and a footer that stays put. */
+@property --how-a { syntax: "<color>"; inherits: false; initial-value: #b9cafa; }
+@property --how-b { syntax: "<color>"; inherits: false; initial-value: #ebd1e6; }
+.how { --how-move: 240ms var(--ease-smooth-out); width: min(400px, calc(100vw - 32px)); }
+.how kbd { min-width: 20px; height: 20px; padding: 0 6px; display: inline-grid; place-items: center; border-radius: 6px; background: var(--fill); box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .06); font: 500 12px / 1 var(--font); color: var(--text-secondary); }
+
+.how-scene { position: relative; height: 200px; overflow: hidden; border-radius: calc(var(--r-xl) - 8px); background: #ececee; }
+.how-canvas { position: absolute; inset: 22px 30px; border-radius: 12px; transition: transform var(--how-move); }
+.how-bg { position: absolute; inset: 0; border-radius: inherit; opacity: 0; background: linear-gradient(135deg, var(--how-a), var(--how-b)); transition: opacity var(--how-move), --how-a var(--how-move), --how-b var(--how-move); }
+.how-window { position: absolute; top: 50%; left: 50%; width: 70%; translate: -50% -50%; overflow: hidden; border-radius: 6px; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .08); transition: width var(--how-move), border-radius var(--how-move), box-shadow var(--how-move), transform var(--how-move); }
+.how-window-bar { height: 0; display: flex; align-items: center; gap: 4px; padding: 0 9px; overflow: hidden; transition: height var(--how-move); }
+.how-window-bar i { width: 6px; height: 6px; flex: none; border-radius: 50%; background: #ff625a; }
+.how-window-bar i:nth-child(2) { background: #ffbd44; }
+.how-window-bar i:nth-child(3) { background: #00c84e; }
+.how-window-body { display: flex; gap: 10px; padding: 10px 12px 14px; }
+.how-side { width: 24%; display: flex; flex-direction: column; gap: 6px; }
+.how-main { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+.how-side b, .how-main b { height: 6px; border-radius: 3px; background: #ececee; }
+.how-main b { width: 90%; }
+.how-main b.wide { width: 100%; height: 16px; border-radius: 5px; background: #f2f2f4; }
+.how-main b.short { width: 55%; }
+/* Pieces around the hub: each fades and settles into place on its own step, and trades places with the next. */
+.how-paste, .how-tilt, .how-export { position: absolute; opacity: 0; transition: opacity var(--how-move), transform var(--how-move); }
+.how-paste { right: 46px; bottom: 24px; display: flex; gap: 3px; padding: 5px; border-radius: 10px; background: var(--surface); box-shadow: var(--shadow-float); transform: translateY(6px) scale(.9); }
+.how-tilt { left: 16px; bottom: 16px; padding: 8px; border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-float); transform: translateY(10px) scale(.94); }
+.how-pad { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; box-shadow: var(--groove); }
+.how-pad i { width: 26px; height: 26px; border-radius: 50%; background: var(--knob); box-shadow: var(--grip-shadow); transition: transform 320ms var(--ease-smooth-out); }
+.how-export { top: 50%; right: 18px; width: 150px; margin-top: -50px; padding: 8px; display: flex; flex-direction: column; gap: 6px; border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-float); transform: translateX(-28px) scale(.9); transform-origin: left center; }
+.how-seg { display: flex; padding: 2px; border-radius: 999px; background: var(--fill); }
+.how-seg span { flex: 1; height: 20px; display: grid; place-items: center; border-radius: 999px; font: 500 10px / 1 var(--font); color: var(--text-secondary); }
+.how-seg span.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
+.how-download { height: 26px; display: grid; place-items: center; border-radius: 8px; background: var(--ink); color: var(--on-ink); font: 600 11px / 1 var(--font); }
+
+/* 1 Add: a plain screenshot, and the paste key beside it. */
+.how-scene[data-step="0"] .how-paste { opacity: 1; transform: none; }
+/* 2 Style: the background fades in behind it, and it gains its window bar and shadow. */
+.how-scene:not([data-step="0"]) .how-bg { opacity: 1; }
+.how-scene:not([data-step="0"]) .how-window { width: 64%; border-radius: 9px; box-shadow: 0 18px 36px -10px rgba(20, 24, 40, .3), 0 0 0 1px rgba(0, 0, 0, .04); }
+.how-scene:not([data-step="0"]) .how-window-bar { height: 18px; }
+/* 3 Tilt: it angles in 3D on a new background; the tilt pad comes in, and its knob settles a beat later. */
+.how-scene[data-step="2"] .how-bg, .how-scene[data-step="3"] .how-bg { --how-a: #e9cbff; --how-b: #aba5ef; }
+.how-scene[data-step="2"] .how-window { transform: perspective(700px) rotateX(12deg) rotateY(-18deg); }
+.how-scene[data-step="2"] .how-tilt { opacity: 1; transform: none; }
+.how-scene[data-step="2"] .how-pad i { transform: translate(-7px, -6px); transition-delay: 120ms; }
+/* 4 Export: the picture shrinks to a thumbnail and the export card grows out from behind it as the tilt pad leaves. */
+.how-scene[data-step="3"] .how-canvas { transform: translateX(-84px) scale(.56); }
+.how-scene[data-step="3"] .how-export { opacity: 1; transform: none; transition-delay: 40ms; }
+
+/* All four steps sit in one grid cell, so the area is as tall as the tallest and never changes height. */
+.how-text { display: grid; margin-top: 18px; }
+.how-text section { grid-area: 1 / 1; padding: 0 16px; opacity: 0; }
+.how-text section.is-current, .how-text section.dissolve-out { opacity: 1; }
+.how-text h2 { margin: 0; font: var(--type-title); letter-spacing: var(--type-title-ls); color: var(--ink); }
+.how-text p { margin: 4px 0 0; font: 400 15px / 22px var(--font); letter-spacing: var(--type-button-ls); color: var(--text-secondary); text-wrap: pretty; }
+.how-text .how-note { margin-top: 10px; font: var(--type-fine); letter-spacing: var(--type-fine-ls); color: var(--text-tertiary); }
+.how-foot { padding: 16px; }
+.how-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 16px; }
+.how-dots i { width: 6px; height: 6px; border-radius: 3px; background: var(--fill-strong); transition: width var(--how-move), background-color var(--how-move); }
 .how-dots i.on { width: 18px; background: var(--text); }
-/* The landing drawings, re-cropped for a smaller tile. */
-.how-art { position: relative; height: 196px; margin-bottom: 18px; overflow: hidden; border-radius: calc(var(--r-xl) - 8px); background: #e9e9ea; }
-.how .how-art .art-frame { position: absolute; top: 28px; left: 28px; right: -40px; bottom: -40px; }
-.how .how-art .art-tilt { position: absolute; top: 28px; left: 96px; right: -40px; bottom: -40px; }
-.how .how-art .art-tilt-card { left: 20px; bottom: 20px; }
-.how .how-art .art-export { transform: translate(-50%, -50%); }
-@media (prefers-reduced-motion: reduce) { .how-dots i, .how-back { transition: none; } }
+.how-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.how-actions .anchor { display: grid; }
+@media (prefers-reduced-motion: reduce) { .how-scene *, .how-dots i { transition: none !important; } }
 
 /* Login (a test of Family ConnectKit's nested pages): the palette is ConnectKit's light theme, and pages dissolve
    in place while the box resizes from its center. */

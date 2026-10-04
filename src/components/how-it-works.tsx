@@ -1,86 +1,110 @@
 "use client";
 
-import { type ReactNode, useCallback, useLayoutEffect, useRef, useState } from "react";
-import { Dialog, fitTo } from "./dialog";
-import { ExportArt, FrameArt, TiltArt } from "./landing";
+import { useCallback, useRef, useState } from "react";
+import { Button } from "./button";
+import { useConfetti } from "./confetti";
+import { Dialog } from "./dialog";
 import { MorphText } from "./morph-text";
-import "@/styles/landing.css";
 
-// "How it works": a few slides in a dialog. The dialog opens like the transitions.dev modal, slides move
-// with its page slide (forward goes left, back goes right), and the box grows or shrinks to each slide's height.
-// The close button, dots and footer stay put while the slides change.
+// "How it works": four steps in a dialog. Every step shows the same screenshot, so the picture above the text is one
+// scene that changes shape instead of four pictures: the plain screenshot gets a background and a window bar, tilts,
+// then shrinks to a thumbnail while the export card grows out from behind it. The text below dissolves (old fades out
+// in place, new fades in from .97). Every step has the same shape of text, and all four share one area sized to the
+// tallest, so the height never changes and Next stays under your pointer. The close button, dots and footer stay put.
 
-const KEYS = (keys: string[]) => keys.map(key => <kbd key={key}>{key}</kbd>);
+const LEAVE_MS = 150;
 
-const SLIDES: { title: string; text: string; art?: ReactNode; extra?: ReactNode }[] = [
-  {
-    title: "Add a screenshot",
-    text: "Bring in an image any of three ways. It stays on your device.",
-    extra: <dl className="how-list">
-      <div><dt>Drop it</dt><dd>onto the canvas</dd></div>
-      <div><dt>Paste it</dt><dd>{KEYS(["⌘", "V"])}</dd></div>
-      <div><dt>Choose a file</dt><dd>{KEYS(["⌘", "O"])}</dd></div>
-    </dl>,
-  },
-  {
-    title: "Give it a style",
-    text: "Pick a frame, a shadow and a background. The canvas updates as you go.",
-    art: <FrameArt />,
-  },
-  {
-    title: "Tilt it and place it",
-    text: "Drag the tilt pad to angle it in 3D, or rotate it. The position grid snaps it to an edge or a corner, and Crop trims the image itself.",
-    art: <TiltArt />,
-  },
-  {
-    title: "Copy or download",
-    text: "Copy it straight into a post or a doc, or download a PNG, JPG or WebP at up to 3×.",
-    art: <ExportArt />,
-    extra: <dl className="how-list">
-      <div><dt>Copy</dt><dd>{KEYS(["⌘", "C"])}</dd></div>
-      <div><dt>Download</dt><dd>{KEYS(["⌘", "S"])}</dd></div>
-      <div><dt>Undo</dt><dd>{KEYS(["⌘", "Z"])}</dd></div>
-    </dl>,
-  },
+// Same shape for every step: a title, about two lines, and one small line for a shortcut or a tip.
+const STEPS: { title: string; text: string; note: string }[] = [
+  { title: "Add a screenshot", text: "Drop it on the canvas, paste it or choose a file. It never leaves your device.", note: "⌘V pastes, ⌘O opens a file." },
+  { title: "Give it a style", text: "Pick a frame, a background and a shadow. The canvas updates as you go.", note: "Your style is kept for next time." },
+  { title: "Tilt it and place it", text: "Drag the tilt pad to angle it in 3D, rotate it, or snap it to an edge or a corner.", note: "Crop trims the image itself." },
+  { title: "Copy or download", text: "Copy it into a post or a doc, or download a PNG, JPG or WebP at up to 3×.", note: "⌘C copies, ⌘S downloads." },
 ];
 
 export function HowItWorks({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const viewport = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
-  const last = index === SLIDES.length - 1;
+  const [leaving, setLeaving] = useState<number | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const finishing = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [confetti, celebrate] = useConfetti();
+  const last = index === STEPS.length - 1;
 
-  // The box takes the current slide's height: instantly as it opens, animated between slides.
-  useLayoutEffect(() => {
-    const box = viewport.current;
-    const slide = box?.children[index] as HTMLElement | undefined;
-    if (box && slide) return fitTo(box, slide);
-  }, [index]);
+  // Done: a burst from the button, then close once the pieces have peaked. Reduced motion skips straight to closing.
+  function finish() {
+    if (finishing.current) return;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { onClose(); return; }
+    celebrate();
+    finishing.current = setTimeout(() => { finishing.current = undefined; onClose(); }, 800);
+  }
 
-  const go = (to: number) => setIndex(Math.max(0, Math.min(SLIDES.length - 1, to)));
-  const reset = useCallback(() => { setIndex(0); viewport.current?.style.removeProperty("height"); }, []);
+  function go(to: number) {
+    const next = Math.max(0, Math.min(STEPS.length - 1, to));
+    if (next === index) return;
+    setLeaving(index);
+    setIndex(next);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => setLeaving(null), LEAVE_MS);
+  }
+
+  const reset = useCallback(() => {
+    clearTimeout(timer.current);
+    clearTimeout(finishing.current);
+    finishing.current = undefined;
+    setIndex(0);
+    setLeaving(null);
+  }, []);
 
   return <Dialog open={open} onClose={onClose} onClosed={reset} labelledBy="how-title" className="how"
     onKeyDown={e => {
       if (e.key === "ArrowRight") { e.preventDefault(); go(index + 1); }
       else if (e.key === "ArrowLeft") { e.preventDefault(); go(index - 1); }
     }}>
-    <div ref={viewport} className="how-slides t-page-slide t-resize">
-      {SLIDES.map((slide, i) => <section key={slide.title} className="how-slide t-page" data-pos={i < index ? "before" : i > index ? "after" : "current"}
+    <Scene step={index} />
+    <div className="how-text">
+      {STEPS.map((step, i) => <section key={step.title} className={i === index ? `is-current ${leaving !== null ? "dissolve-in" : ""}` : i === leaving ? "dissolve-out" : undefined}
         inert={i !== index} aria-hidden={i !== index}>
-        {slide.art && <div className="how-art" aria-hidden="true">{slide.art}</div>}
-        <h2 id={i === index ? "how-title" : undefined}>{slide.title}</h2>
-        <p>{slide.text}</p>
-        {slide.extra}
+        <h2 id={i === index ? "how-title" : undefined}>{step.title}</h2>
+        <p>{step.text}</p>
+        <p className="how-note">{step.note}</p>
       </section>)}
     </div>
     <footer className="how-foot">
-      <button type="button" className="button ghost how-back" disabled={index === 0} onClick={() => go(index - 1)}>Back</button>
-      <div className="how-dots" aria-label={`Step ${index + 1} of ${SLIDES.length}`} role="img">
-        {SLIDES.map((slide, i) => <i key={slide.title} className={i === index ? "on" : undefined} />)}
+      <div className="how-dots" role="img" aria-label={`Step ${index + 1} of ${STEPS.length}`}>
+        {STEPS.map((step, i) => <i key={step.title} className={i === index ? "on" : undefined} />)}
       </div>
-      <button type="button" className="button primary how-next" data-autofocus onClick={() => last ? onClose() : go(index + 1)}>
-        <MorphText text={last ? "Done" : "Next"} />
-      </button>
+      <div className="how-actions">
+        <Button size="large" rounded={false} disabled={index === 0} onClick={() => go(index - 1)}>Back</Button>
+        <div className="anchor">
+          {confetti}
+          <Button variant="primary" size="large" rounded={false} data-autofocus onClick={() => last ? finish() : go(index + 1)}>
+            <MorphText text={last ? "Done" : "Next"} />
+          </Button>
+        </div>
+      </div>
     </footer>
   </Dialog>;
+}
+
+// One drawing for all four steps; CSS moves its pieces by data-step. The screenshot is the hub everything flows through.
+function Scene({ step }: { step: number }) {
+  return <div className="how-scene" data-step={step} aria-hidden="true">
+    <div className="how-canvas">
+      <div className="how-bg" />
+      <div className="how-window">
+        <div className="how-window-bar"><i /><i /><i /></div>
+        <div className="how-window-body">
+          <div className="how-side"><b /><b /><b /></div>
+          <div className="how-main"><b className="wide" /><b /><b /><b className="short" /></div>
+        </div>
+      </div>
+    </div>
+    <span className="how-paste"><kbd>⌘</kbd><kbd>V</kbd></span>
+    <div className="how-tilt"><span className="how-pad"><i /></span></div>
+    <div className="how-export">
+      <div className="how-seg"><span className="on">PNG</span><span>JPG</span><span>WebP</span></div>
+      <div className="how-seg"><span>1×</span><span className="on">2×</span><span>3×</span></div>
+      <span className="how-download">Download</span>
+    </div>
+  </div>;
 }

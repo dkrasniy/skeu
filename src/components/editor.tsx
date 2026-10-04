@@ -3,6 +3,7 @@
 import { type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowDown01Icon, ArrowDataTransferHorizontalIcon, Copy01Icon, Delete02Icon, HelpCircleIcon, RedoIcon, Tick02Icon, UndoIcon } from "@hugeicons/core-free-icons";
 import { Artboard } from "./artboard";
+import { useConfetti } from "./confetti";
 import { CropEditor } from "./crop";
 import { HowItWorks } from "./how-it-works";
 import { MorphText } from "./morph-text";
@@ -42,26 +43,6 @@ const POSITION_KEYS = ["x", "y", "rotation", "tiltX", "tiltY"] as const satisfie
 const BACKGROUND_KEYS = ["background", "color1", "color2", "angle"] as const satisfies readonly (keyof Settings)[];
 const isDefault = (s: Settings, keys: readonly (keyof Settings)[]) => keys.every(k => s[k] === DEFAULT_SETTINGS[k]);
 const defaults = (keys: readonly (keyof Settings)[]): Partial<Settings> => Object.fromEntries(keys.map(k => [k, DEFAULT_SETTINGS[k]]));
-const CONFETTI = ["#6f86ff", "#9b78f2", "#f08bbd", "#ffbd44", "#00c84e", "#ff625a"];
-
-interface Particle { dx: number; apex: number; fall: number; dur: number; delay: number; spin: number; flip: number; r0: number; w: number; h: number; round: boolean; color: string }
-
-// Thrown mostly upward: each piece rises and slows, then falls under gravity while tumbling.
-function confetti(count = 22): Particle[] {
-  const rand = (min: number, max: number) => min + Math.random() * (max - min);
-  return Array.from({ length: count }, (_, i) => {
-    const shape = i % 3;
-    const side = i % 2 ? 1 : -1;
-    return {
-      dx: side * rand(18, 135), apex: -rand(72, 150), fall: rand(30, 90),
-      dur: rand(1050, 1500), delay: rand(0, 60),
-      spin: side * rand(240, 720), flip: rand(360, 1080), r0: rand(0, 360),
-      w: shape === 0 ? rand(3.5, 4.5) : rand(5, 6.5), h: shape === 0 ? rand(8, 11) : rand(5, 6.5), round: shape === 2,
-      color: CONFETTI[i % CONFETTI.length],
-    };
-  });
-}
-
 // Opens the home page in a new tab: the image lives only in this page, so leaving it would lose the work.
 function Logo() {
   return <a className="logo" href={HOME_HREF} target="_blank" rel="noopener" aria-label="About Skeu"><img src="/logo.svg" alt="" width={24} height={24} /></a>;
@@ -79,7 +60,7 @@ export function Editor() {
   const [scaleChoice, setScaleChoice] = useState<Scale>("2");
   const [exporting, setExporting] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [burst, setBurst] = useState<{ id: number; particles: Particle[] } | null>(null);
+  const [confetti, celebrate] = useConfetti();
   const [fit, setFit] = useState(.5);
   const [dragging, setDragging] = useState(false);
   const [dropping, setDropping] = useState(false);
@@ -90,7 +71,6 @@ export function Editor() {
   const fileInput = useRef<HTMLInputElement>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const copiedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const burstTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const importId = useRef(0);
   const drag = useRef<{ clientX: number; clientY: number; x: number; y: number; width: number; height: number } | null>(null);
   const sizing = useRef<{ clientX: number; clientY: number; width: number; height: number; maxWidth: number; maxHeight: number } | null>(null);
@@ -118,7 +98,7 @@ export function Editor() {
     rememberEditor();
     const style = loadStyle();
     if (style) restore({ ...INITIAL_DOCUMENT, settings: style });
-    return () => { clearTimeout(toastTimer.current); clearTimeout(copiedTimer.current); clearTimeout(burstTimer.current); clearTimeout(wheelTimer.current); };
+    return () => { clearTimeout(toastTimer.current); clearTimeout(copiedTimer.current); clearTimeout(wheelTimer.current); };
   }, [restore]);
   useEffect(() => {
     const timer = setTimeout(() => saveStyle(s), 300);
@@ -194,9 +174,7 @@ export function Editor() {
   const download = useCallback(async () => {
     if (exporting || !doc.asset || cropping) return;
     // Celebrate on the click itself; rendering a large image can take a moment.
-    setBurst(b => ({ id: (b?.id ?? 0) + 1, particles: confetti() }));
-    clearTimeout(burstTimer.current);
-    burstTimer.current = setTimeout(() => setBurst(null), 1700);
+    celebrate();
     setExporting(true);
     try {
       const url = URL.createObjectURL(await render(format));
@@ -208,7 +186,7 @@ export function Editor() {
       setMenu(null);
     } catch { notify("The download didn’t finish. Try a smaller size."); }
     finally { setExporting(false); }
-  }, [exporting, doc.asset, cropping, doc.name, render, format, notify]);
+  }, [exporting, doc.asset, cropping, doc.name, render, format, notify, celebrate]);
 
   const copy = useCallback(async () => {
     if (exporting || !doc.asset || cropping) return;
@@ -543,12 +521,7 @@ export function Editor() {
             </span>Copy
           </button>
           <div className="anchor split-button">
-            {burst && <span className="confetti" key={burst.id} aria-hidden="true">
-              {burst.particles.map((pt, i) => <i key={i} style={{ "--dx": `${pt.dx}px`, "--apex": `${pt.apex}px`, "--fall": `${pt.fall}px`, "--dur": `${pt.dur}ms`, "--delay": `${pt.delay}ms`,
-                "--spin": `${pt.spin}deg`, "--flip": `${pt.flip}deg`, "--r0": `${pt.r0}deg` } as CSSProperties}>
-                <b><s style={{ width: pt.w, height: pt.h, background: pt.color, borderRadius: pt.round ? "50%" : 1 }} /></b>
-              </i>)}
-            </span>}
+            {confetti}
             <button type="button" className="button primary split-main" title="Download (⌘S)" disabled={!doc.asset || cropping || exporting} onClick={() => void download()}><MorphText text={`Download ${FORMAT_LABEL[format]}`} /></button>
             <button type="button" className="button primary split-toggle" aria-label="Download options" disabled={!doc.asset || cropping || exporting} data-menu-trigger aria-expanded={menu === "export"} onClick={() => toggleMenu("export")}><Icon icon={ArrowDown01Icon} size={14} /></button>
             <Menu open={menu === "export"} onClose={closeMenu} label="Download options" origin="bottom-right" className="export-menu">
