@@ -15,10 +15,13 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   openGraph: { type: "website", siteName: "Skeu", url: "/", title: "Skeu: make beautiful screenshots", description },
   twitter: { card: "summary_large_image", title: "Skeu: make beautiful screenshots", description },
+  // Skeu has no dark theme yet, so dark-mode extensions mustn't repaint it: they'd change the colors you're picking.
+  other: { "darkreader-lock": "true" },
 };
 
 // viewport-fit=cover lets the mobile download bar pad itself clear of the iPhone home indicator.
-export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
+// "only light" keeps browsers (Chrome's auto dark mode) from darkening the page, swatches and previews included.
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", colorScheme: "only light" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return <html lang="en" data-theme="light" className={inter.variable}><body>{children}<Analytics /></body></html>;

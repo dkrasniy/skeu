@@ -2,6 +2,7 @@
 @import "../styles/transitions.css";
 
 :root {
+  color-scheme: only light;
   --font: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --panel-width: 340px;
   --h-control: 36px;
@@ -10,6 +11,14 @@
   --tabs-text-muted: var(--text-secondary);
   --tabs-text-active: var(--text);
   --hover: var(--duration-quick) var(--ease-smooth-out);
+  /* Reading type (dialogs, empty states, pages), on Tailwind's scale: the title at base (16px), content one step down
+     at text-sm (14px), labels at 13px and fine print at text-xs (12px). Titles also lead by weight and color.
+     Tracking follows Inter's spacing for each size; fine print sits a little tighter at 1.4. */
+  --type-title: 600 16px / 24px var(--font); --type-title-ls: -.011em;
+  --type-body: 400 14px / 20px var(--font); --type-body-ls: -.006em;
+  --type-label: 500 13px / 18px var(--font); --type-label-ls: -.003em;
+  --type-button: 600 15px / 20px var(--font); --type-button-ls: -.009em;
+  --type-fine: 400 12px / 1.4 var(--font); --type-fine-ls: 0;
   --ease-tilt: cubic-bezier(0.03, 0.98, 0.52, 0.99);
   --grip:
     linear-gradient(to right, transparent 8px, rgba(255, 255, 255, .6) 8px 9.5px, transparent 9.5px 12.5px, rgba(255, 255, 255, .6) 12.5px 14px, transparent 14px) center / 100% 9px no-repeat,
@@ -214,7 +223,13 @@
 /* The end color and swap button: the accordion turned on its side, so the start color slides over as they go. */
 .t-acc .chips-more { grid-template-rows: 1fr; grid-template-columns: 0fr; transition-property: grid-template-columns; }
 .t-acc[data-open="true"] .chips-more { grid-template-columns: 1fr; transition-property: grid-template-columns; }
-.chips-more .chips { padding-left: 6px; }
+/* The end color and swap button keep their size and slide in from the right (no squeeze, no blur) while the space
+   for them opens; the start color glides over as it does. */
+.chips-more .chips { width: max-content; padding-left: 6px; translate: 16px 0; transition: translate var(--acc-collapse) var(--acc-ease); }
+.chips-more .chips > * { flex: none; }
+.t-acc .chips-more .t-acc-panel-inner { filter: none; }
+.t-acc[data-open="true"] .chips-more .chips { translate: 0 0; transition-duration: var(--acc-expand); }
+@media (prefers-reduced-motion: reduce) { .chips-more .chips { transition: none; } }
 .background-colors > .chips { gap: 0; }
 /* The angle row brings its own divider, so it folds away with the row. */
 .tray-card .background-colors { border-bottom: 0; }
@@ -241,7 +256,7 @@
 .menu-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; padding: 10px 5px 5px; border-top: 1px solid var(--hairline); }
 .menu-fields label { display: grid; gap: 6px; font-size: var(--fs-12); color: var(--text-secondary); }
 .menu-fields input { width: 100%; height: var(--h-input); padding: 0 10px; border: 0; border-radius: var(--r-sm); background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); font-size: var(--fs-13); color: var(--text); outline: none; transition: box-shadow var(--hover); }
-.menu-fields input:focus { box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px var(--accent-soft); }
+.menu-fields input:focus { box-shadow: inset 0 0 0 1px var(--accent); }
 .menu-meta { margin: 4px 0 6px; font-size: var(--fs-12); color: var(--text-tertiary); }
 
 /* Toast */
@@ -279,3 +294,110 @@
   .panel-scroll { overflow: visible; padding: 0; gap: 12px; }
   .panel-footer { position: sticky; bottom: 0; z-index: 10; margin: 4px -12px 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: var(--frame); border-top: 1px solid var(--hairline); }
 }
+
+/* How it works: a dialog of slides. The box resizes to each slide; the close button, dots and footer stay put. */
+/* Dialogs share one shell: the native <dialog> is the transitions.dev modal, the box inside holds the content.
+   Boxes that resize clip with overflow: clip, never hidden, so focusing a control can't scroll their content. */
+.dialog { max-width: none; max-height: none; padding: 0; border: 0; background: transparent; color: inherit; overflow: visible; }
+.dialog::backdrop { background: rgb(20 20 24 / 0); transition: background var(--modal-open-dur) var(--modal-ease); }
+.dialog.is-open::backdrop { background: rgb(20 20 24 / .32); }
+.dialog.is-closing::backdrop { transition-duration: var(--modal-close-dur); }
+.dialog-box { position: relative; padding: 8px; border-radius: var(--r-xl); background: var(--surface); box-shadow: var(--shadow-overlay); }
+.dialog-close { position: absolute; top: 14px; right: 14px; z-index: 1; }
+@media (prefers-reduced-motion: reduce) { .dialog::backdrop { transition: none; } }
+
+/* How it works: a dialog of slides. The box resizes to each slide; the close button, dots and footer stay put. */
+.how { width: min(400px, calc(100vw - 32px)); }
+.how-slides { --resize-dur: 250ms; overflow: clip; }
+.how-slides .how-slide { inset: 0 0 auto; padding-bottom: 4px; }
+.how-slide:not(:has(.how-art)) { padding-top: 18px; }
+.how-slide h2 { margin: 0 52px 0 14px; font: var(--type-title); letter-spacing: var(--type-title-ls); color: var(--ink); }
+.how-slide p { margin: 4px 14px 0; font: var(--type-body); letter-spacing: var(--type-body-ls); color: var(--text-secondary); }
+.how-list { margin: 14px 14px 0; }
+.how-list div { height: 40px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--hairline); }
+.how-list dt { font: var(--type-body); font-weight: var(--fw-medium); letter-spacing: var(--type-body-ls); color: var(--text); }
+.how-list dd { margin: 0; display: flex; gap: 4px; font: var(--type-body); letter-spacing: var(--type-body-ls); color: var(--text-secondary); }
+.how-list kbd { min-width: 20px; height: 20px; padding: 0 6px; display: inline-grid; place-items: center; border-radius: 6px; background: var(--fill); box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .06); font: inherit; font-size: var(--fs-12); font-weight: var(--fw-medium); color: var(--text-secondary); }
+.how-foot { display: flex; align-items: center; justify-content: space-between; padding: 14px 6px 6px; }
+.how-back { transition: opacity var(--duration-quick) var(--ease-smooth-out), background-color var(--hover); }
+.how-back:disabled { opacity: 0; }
+.how-next { min-width: 84px; }
+.how-dots { display: flex; gap: 6px; }
+.how-dots i { width: 6px; height: 6px; border-radius: 3px; background: var(--fill-strong); transition: width var(--page-slide-dur) var(--page-slide-ease), background-color var(--page-slide-dur) var(--page-slide-ease); }
+.how-dots i.on { width: 18px; background: var(--text); }
+/* The landing drawings, re-cropped for a smaller tile. */
+.how-art { position: relative; height: 196px; margin-bottom: 18px; overflow: hidden; border-radius: calc(var(--r-xl) - 8px); background: #e9e9ea; }
+.how .how-art .art-frame { position: absolute; top: 28px; left: 28px; right: -40px; bottom: -40px; }
+.how .how-art .art-tilt { position: absolute; top: 28px; left: 96px; right: -40px; bottom: -40px; }
+.how .how-art .art-tilt-card { left: 20px; bottom: 20px; }
+.how .how-art .art-export { transform: translate(-50%, -50%); }
+@media (prefers-reduced-motion: reduce) { .how-dots i, .how-back { transition: none; } }
+
+/* Login (a test of Family ConnectKit's nested pages): the palette is ConnectKit's light theme, and pages dissolve
+   in place while the box resizes from its center. */
+.login { --field-focus: var(--accent); --field-muted-fill: var(--login-raised); --login-raised: #f6f7f9; --login-text: #373737; --login-strong: #111; --login-muted: #999; --login-muted-hover: #111; color: var(--login-text); }
+.login-head { position: relative; height: 52px; display: grid; place-items: center; }
+.login-title { display: grid; margin: 0; font: var(--type-title); letter-spacing: var(--type-title-ls); color: var(--login-strong); }
+.login-title span { grid-area: 1 / 1; text-align: center; white-space: nowrap; }
+.login-back { position: absolute; top: 8px; left: 6px; opacity: 0; transition: opacity var(--duration-quick) var(--ease-smooth-out), background-color var(--hover); }
+.login-back.is-shown { opacity: 1; }
+.login .dialog-close { top: 16px; right: 14px; }
+.login-box { --resize-dur: 200ms; position: relative; overflow: clip; }
+.login-page { position: absolute; top: 0; left: 50%; translate: -50% 0; padding: 8px 16px 16px; }
+.login-page, .login-page form { display: flex; flex-direction: column; gap: 12px; }
+.login-page form { gap: 16px; }
+.login-page[data-page="start"] { width: 360px; }
+.login-page[data-page="email"], .login-page[data-page="sent"] { width: 380px; }
+.login-page[data-page="google"] { width: 340px; }
+.login-page[data-page="signup"] { width: 400px; }
+.login-option { height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border: 0; border-radius: var(--r-md); background: var(--login-raised); color: var(--login-text); font: 500 15px / 20px var(--font); letter-spacing: var(--type-button-ls); cursor: pointer; transition: background-color var(--hover), transform var(--duration-quick) var(--ease-smooth-out); }
+.login-option:hover { background: color-mix(in srgb, var(--login-raised), #000 4%); }
+.login-option:active { transform: scale(.97); }
+.login-fine { margin: 4px 8px 0; text-align: center; font: var(--type-fine); letter-spacing: var(--type-fine-ls); color: var(--login-muted); text-wrap: pretty; }
+.login-note { margin: 4px 0 0; text-align: center; font: var(--type-body); letter-spacing: var(--type-body-ls); color: var(--login-muted); }
+.login-link { padding: 0; border: 0; background: none; color: var(--login-text); font: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 25%, transparent); text-decoration-thickness: 1px; text-underline-offset: 3px; cursor: pointer; transition: color var(--hover), text-decoration-color var(--hover); }
+.login-link:hover { color: var(--login-muted-hover); text-decoration-color: currentColor; }
+.login-page .button.large { width: 100%; }
+/* Actions in a dialog share one size (boxy, full width); rows you choose between (like the login options) are taller rows. */
+.dialog .button.large { height: 48px; }
+.button.square { border-radius: var(--r-md); }
+/* Loading: the label fades but keeps its space; the spinner fades in over the middle in the label's color. */
+.button:has(.button-label) { position: relative; }
+.button-label { display: inline-flex; align-items: center; gap: inherit; transition: opacity var(--duration-quick) var(--ease-smooth-out); }
+.button[aria-busy="true"] { cursor: default; }
+.button[aria-busy="true"] .button-label { opacity: 0; }
+.button-spinner { position: absolute; inset: 0; width: 16px; height: 16px; margin: auto; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: button-spin .7s linear infinite, button-spinner-in var(--duration-quick) var(--ease-smooth-out) both; }
+@keyframes button-spin { to { rotate: 1turn; } }
+@keyframes button-spinner-in { from { opacity: 0; } }
+.login .button.secondary { background: var(--login-raised); color: var(--login-text); }
+.login .button.secondary:not(:disabled):hover { background: color-mix(in srgb, var(--login-raised), #000 4%); }
+.dialog .button { font: var(--type-button); letter-spacing: var(--type-button-ls); }
+/* A short title over a short line: both stay at the title size, and the title leads by weight and color alone. */
+.login-lead { margin: 0 8px 4px; text-align: center; font: 400 16px / 24px var(--font); letter-spacing: var(--type-title-ls); color: var(--login-muted); }
+.login-lead b { display: block; margin-bottom: 2px; font: var(--type-title); letter-spacing: var(--type-title-ls); color: var(--login-strong); }
+.login-lead b.inline { display: inline; font: inherit; font-weight: var(--fw-medium); color: var(--login-text); }
+.login-spinner { width: 28px; height: 28px; margin: 18px auto 6px; border: 2.5px solid var(--login-raised); border-top-color: var(--login-text); border-radius: 50%; animation: login-spin .8s linear infinite; }
+.login-badge { width: 48px; height: 48px; margin: 14px auto 4px; display: grid; place-items: center; border-radius: 50%; background: var(--login-raised); }
+@keyframes login-spin { to { rotate: 1turn; } }
+/* The dissolve: the old page fades where it is; the new one follows a beat later, scaling up from .97. */
+.dissolve-in { animation: dissolve-in 150ms ease 25ms both; }
+.dissolve-out { animation: dissolve-out 100ms ease both; pointer-events: none; }
+@keyframes dissolve-in { from { opacity: 0; scale: .97; } }
+@keyframes dissolve-out { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .dissolve-in, .dissolve-out { animation: none; } .login-back { transition: none; } }
+
+/* Text fields: a muted fill, and a 1.5px inset line that only shows when it means something: brand on focus, red
+   when invalid. At rest there's no line. The fill falls back to a tint of the text color, so the same rule works on
+   light and dark surfaces. */
+.field { --field-fill: var(--field-muted-fill, color-mix(in srgb, currentColor 5%, transparent)); --field-line: transparent; display: flex; flex-direction: column; gap: 6px; }
+.field-label { font: var(--type-label); letter-spacing: var(--type-label-ls); color: var(--login-text, var(--text)); }
+.field input { height: 48px; padding: 0 16px; border: 0; border-radius: 14px; background: var(--field-fill); color: inherit; font: 400 15px / 20px var(--font); letter-spacing: var(--type-button-ls); outline: none; box-shadow: inset 0 0 0 1.5px var(--field-line); transition: box-shadow var(--hover); }
+.field input::placeholder { color: color-mix(in srgb, currentColor 40%, transparent); }
+.field input:focus { --field-line: var(--field-focus, currentColor); }
+.field[data-invalid] { --field-line: var(--critical); --field-focus: var(--critical); }
+/* The message folds open under the field (the accordion's 0fr → 1fr) instead of pushing things down at once. */
+.field-message { display: grid; grid-template-rows: 0fr; margin-top: -6px; transition: grid-template-rows var(--duration-quick) var(--ease-smooth-out), margin-top var(--duration-quick) var(--ease-smooth-out); }
+.field-message p { min-height: 0; overflow: hidden; margin: 0; font: var(--type-label); font-weight: 400; letter-spacing: var(--type-label-ls); color: var(--critical); }
+.field[data-invalid] .field-message { grid-template-rows: 1fr; margin-top: 0; }
+@media (pointer: coarse) { .field input { font-size: 16px; } } /* below 16px, iOS zooms in on focus */
+@media (prefers-reduced-motion: reduce) { .field input, .field-message { transition: none; } }

@@ -87,11 +87,11 @@ function Window({ className = "" }: { className?: string }) {
   </div>;
 }
 
-function FrameArt() {
+export function FrameArt() {
   return <div className="art-canvas art-frame"><Window /></div>;
 }
 
-function TiltArt() {
+export function TiltArt() {
   return <>
     <div className="art-canvas art-tilt"><Window className="is-tilted" /></div>
     <div className="art-card art-tilt-card">
@@ -117,7 +117,7 @@ function CropArt() {
 const CONFETTI = ["#6f86ff", "#9b78f2", "#f08bbd", "#ffbd44", "#00c84e", "#ff625a"];
 const PIECES = [[-62, -38, 20], [-30, -64, -35], [8, -58, 50], [44, -70, 15], [78, -44, -20], [-80, 6, 65], [96, -10, 30], [24, -86, -60]];
 
-function ExportArt() {
+export function ExportArt() {
   return <div className="art-card art-export">
     <div className="art-row"><span className="art-label">Format</span>
       <span className="art-seg"><span className="on">PNG</span><span>JPG</span><span>WebP</span></span></div>

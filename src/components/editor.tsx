@@ -1,9 +1,10 @@
 "use client";
 
 import { type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent, useCallback, useEffect, useRef, useState } from "react";
-import { ArrowDown01Icon, ArrowDataTransferHorizontalIcon, Copy01Icon, Delete02Icon, RedoIcon, Tick02Icon, UndoIcon } from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, ArrowDataTransferHorizontalIcon, Copy01Icon, Delete02Icon, HelpCircleIcon, RedoIcon, Tick02Icon, UndoIcon } from "@hugeicons/core-free-icons";
 import { Artboard } from "./artboard";
 import { CropEditor } from "./crop";
+import { HowItWorks } from "./how-it-works";
 import { MorphText } from "./morph-text";
 import { ColorChip, Icon, IconButton, Menu, PositionGrid, ResizeHandle, Segmented, Slider, SliderRow, TiltPad } from "./controls";
 import { type Asset, type Settings, anchorOffsets, canvasDimensions, clamp, DEFAULT_SETTINGS, GRADIENTS, INITIAL_DOCUMENT, RATIOS, SOLIDS } from "@/lib/editor-state";
@@ -15,6 +16,23 @@ import { useHistory } from "@/lib/use-history";
 
 type ImageFormat = "png" | "jpeg" | "webp";
 type Scale = "1" | "2" | "3";
+
+// Keeps a card's bottom in view while it grows (an accordion opening inside it), scrolling its panel along with
+// the growth so the new options never open out of sight. It never scrolls the card's top out of view.
+function keepInView(el: HTMLElement, ms = 400) {
+  // The panel scrolls on its own on wide screens; on narrow ones the page does.
+  const panel = el.closest<HTMLElement>(".panel-scroll");
+  const scroller = panel && /auto|scroll/.test(getComputedStyle(panel).overflowY) ? panel : null;
+  const end = performance.now() + ms;
+  const step = () => {
+    const box = el.getBoundingClientRect();
+    const view = scroller ? scroller.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+    const by = Math.min(box.bottom + 8 - view.bottom, box.top - view.top - 8);
+    if (by > 0.5) { if (scroller) scroller.scrollTop += by; else window.scrollBy(0, by); }
+    if (performance.now() < end) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 
 const FORMAT_LABEL: Record<ImageFormat, string> = { png: "PNG", jpeg: "JPG", webp: "WebP" };
 const SHADOW_KEYS = ["shadow", "shadowX", "shadowY", "shadowBlur", "shadowSpread", "shadowColor"] as const satisfies readonly (keyof Settings)[];
@@ -52,6 +70,9 @@ function Logo() {
 export function Editor() {
   const { doc, update, begin, end, undo, redo, restore, adjusting, canUndo, canRedo } = useHistory();
   const s = doc.settings;
+  const backgroundTray = useRef<HTMLElement>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const closeHelp = useCallback(() => setHelpOpen(false), []);
   const [menu, setMenu] = useState<"size" | "export" | "shadow" | null>(null);
   const [toast, setToast] = useState<{ text: string; open: boolean; undoable: boolean }>({ text: "", open: false, undoable: false });
   const [format, setFormat] = useState<ImageFormat>("png");
@@ -205,7 +226,7 @@ export function Editor() {
   useEffect(() => {
     const keydown = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement).matches('input:not([type="range"]), textarea, [contenteditable="true"]')) return;
-      if (!(e.metaKey || e.ctrlKey)) return;
+      if (!(e.metaKey || e.ctrlKey) || document.querySelector("dialog[open]")) return;
       const key = e.key.toLowerCase();
       if (key === "z") { e.preventDefault(); if (e.shiftKey) redo(); else undo(); }
       else if (key === "s") { e.preventDefault(); void download(); }
@@ -406,6 +427,7 @@ export function Editor() {
             <div className="icon-group">
               <IconButton label="Undo (⌘Z)" icon={UndoIcon} onClick={undo} disabled={!canUndo} />
               <IconButton label="Redo (⌘⇧Z)" icon={RedoIcon} onClick={redo} disabled={!canRedo} />
+              <IconButton label="How it works" icon={HelpCircleIcon} onClick={() => { setMenu(null); setHelpOpen(true); }} />
             </div>
           </div>
         </header>
@@ -427,6 +449,7 @@ export function Editor() {
             <p className="empty-hint">Drop an image here, or paste one with ⌘V.</p>
             <div className="empty-actions">
               <button type="button" className="button primary" onClick={() => fileInput.current?.click()}>Choose image</button>
+              <button type="button" className="button secondary" onClick={() => setHelpOpen(true)}>How it works</button>
             </div>
           </div>}
         </div>
@@ -480,14 +503,14 @@ export function Editor() {
             </div>
           </section>
 
-          <section className="tray">
+          <section className="tray" ref={backgroundTray}>
             <div className="tray-head"><h2>Background</h2>
               {!isDefault(s, BACKGROUND_KEYS) && <button type="button" className="link" onClick={() => change(defaults(BACKGROUND_KEYS))}>Reset</button>}</div>
             {/* Gradient ↔ Solid: the first two rows of swatches stay put and fade between palettes; the third row,
                 the end color and the angle open and close like the transitions.dev accordion. */}
             <div className="tray-card t-acc" data-open={gradient}>
             <div className="row"><span className="row-label">Type</span>
-              <Segmented label="Background type" value={s.background} onChange={background => change({ background })} options={[{ value: "gradient", label: "Gradient" }, { value: "solid", label: "Solid" }]} /></div>
+              <Segmented label="Background type" value={s.background} onChange={background => { change({ background }); if (background === "gradient" && backgroundTray.current) keepInView(backgroundTray.current); }} options={[{ value: "gradient", label: "Gradient" }, { value: "solid", label: "Solid" }]} /></div>
             <div className="row swatches">
               <div className="swatch-grid">
                 {gradient
@@ -540,6 +563,7 @@ export function Editor() {
       </aside>
     </main>
 
+    <HowItWorks open={helpOpen} onClose={closeHelp} />
     <div className="toast-layer"><div className={`toast t-toast ${toast.open ? "is-open" : ""}`} role="status" aria-live="polite" inert={!toast.open}>
       {toast.text}
       {toast.undoable && <button type="button" className="toast-action" onClick={() => { undo(); setToast(t => ({ ...t, open: false })); clearTimeout(toastTimer.current); }}>Undo</button>}

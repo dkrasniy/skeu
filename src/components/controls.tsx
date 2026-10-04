@@ -4,8 +4,12 @@ import { type ComponentProps, type PointerEvent as ReactPointerEvent, type React
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { TILT_MAX } from "@/lib/editor-state";
 
-function cssDuration(name: string, fallback: number) {
-  return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) || fallback;
+// A duration token in ms. The CSS build rewrites "150ms" as ".15s", so both units are read.
+export function cssDuration(name: string, fallback: number) {
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const n = parseFloat(value);
+  if (Number.isNaN(n)) return fallback;
+  return value.endsWith("ms") ? n : value.endsWith("s") ? n * 1000 : n;
 }
 
 export function Icon({ icon, size = 16 }: { icon: IconSvgElement; size?: 14 | 16 | 18 | 20 }) {
