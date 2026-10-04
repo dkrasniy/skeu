@@ -34,7 +34,7 @@ export function Artboard({ settings: s, asset, artboardRef, dragging, adjusting,
         <span style={{ ...dot, background: "#ff625a" }} /><span style={{ ...dot, background: "#ffbd44" }} /><span style={{ ...dot, background: "#00c84e" }} />
       </div>}
       <div style={{ padding: inset, lineHeight: 0 }}>
-        <div style={{ position: "relative", overflow: "hidden", height: image.height * k, borderRadius: inset ? Math.max(0, s.radius * unit - inset) : 0 }}>
+        <div className="shot-crop" style={{ position: "relative", overflow: "hidden", height: image.height * k, borderRadius: inset ? Math.max(0, s.radius * unit - inset) : 0 }}>
           <img className="shot-image" src={asset.src} alt={asset.name} draggable={false}
             style={{ position: "absolute", left: -image.x * k, top: -image.y * k, width: asset.width * k, height: asset.height * k, maxWidth: "none" }} />
         </div>

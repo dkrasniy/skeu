@@ -71,13 +71,22 @@
 
 .stage { flex: 1; min-height: 0; position: relative; touch-action: none; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: var(--r-lg); transition: background-color var(--hover), box-shadow var(--hover); }
 .app.is-dropping .stage { background: color-mix(in srgb, var(--accent) 6%, var(--frame)); box-shadow: inset 0 0 0 2px var(--accent); }
-.preview { position: relative; flex: none; box-shadow: 0 0 0 1px rgba(0, 0, 0, .05); }
+.preview { position: relative; flex: none; border-radius: 12px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .05); }
+/* The canvas is rounded on screen to sit with the rest of the UI; the exported image stays square. The clip lives on
+   its own layer so the corner handles outside it aren't cut off. */
+.preview-clip { position: absolute; inset: 0; overflow: clip; border-radius: inherit; }
 .preview-scaler { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
 .guides { position: absolute; inset: 0; pointer-events: none; }
-.resize-corner { position: absolute; right: 4px; bottom: 4px; z-index: 2; }
-.resize-grip { width: 28px; height: 28px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: nwse-resize; touch-action: none; }
-.resize-grip::before { content: ""; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; background: rgba(0, 0, 0, .12); box-shadow: 0 0 0 1px rgba(0, 0, 0, .12), 0 1px 3px rgba(0, 0, 0, .2); transition: transform var(--hover); }
-.resize-grip:hover::before, .resize-grip:active::before { transform: scale(1.2); }
+/* Canvas corner handles: rounded brackets hugging each corner from just outside (iOS crop style), in a muted grey.
+   They show while you're over the canvas or resizing (always on touch screens) and darken on the one you grab. */
+.resize-handle { position: absolute; z-index: 2; width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border: 0; background: transparent; color: color-mix(in srgb, var(--text) 30%, transparent); touch-action: none; opacity: 0; transition: opacity var(--hover), color var(--hover); }
+.resize-handle[data-corner="nw"] { top: -12px; left: -12px; cursor: nwse-resize; }
+.resize-handle[data-corner="ne"] { top: -12px; right: -12px; cursor: nesw-resize; }
+.resize-handle[data-corner="se"] { bottom: -12px; right: -12px; cursor: nwse-resize; }
+.resize-handle[data-corner="sw"] { bottom: -12px; left: -12px; cursor: nesw-resize; }
+.preview:hover .resize-handle, .preview[data-resizing] .resize-handle, .resize-handle:focus-visible { opacity: 1; }
+.resize-handle:hover, .resize-handle:active, .resize-handle:focus-visible { color: color-mix(in srgb, var(--text) 60%, transparent); }
+@media (hover: none) { .resize-handle { opacity: 1; } }
 .t-tt { font-size: var(--fs-12); font-weight: var(--fw-medium); }
 .guide { position: absolute; background: rgba(255, 255, 255, .8); }
 .guide.vertical { top: 0; bottom: 0; left: 50%; width: 1px; }
@@ -87,7 +96,21 @@
 
 /* Crop mode: the whole source image, the kept area outlined and the rest dimmed */
 .crop { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
-.crop-image { position: relative; flex: none; user-select: none; touch-action: none; }
+.crop-image { position: relative; flex: none; transform-origin: 0 0; user-select: none; touch-action: none; }
+/* The editor canvas stays underneath while cropping and fades out and back in as the crop view grows from it and
+   returns to it. The handles and the bar only belong to cropping: they fade in a beat after the image, and out first. */
+.preview { transition: opacity 200ms var(--ease-smooth-out); }
+.preview.is-behind { opacity: 0; }
+/* Under the crop view the card takes its new shape at once, so the crop can land exactly on it. */
+.preview[data-cropping] .shot { transition: none; }
+.crop-handle { animation: crop-chrome-in 180ms var(--ease-smooth-out) 140ms backwards; }
+.crop.is-leaving .crop-handle { opacity: 0; transition: opacity 100ms ease-out; }
+/* The bar slides up into place from just below as it fades in, and slides back down as it leaves. */
+.crop-bar { animation: crop-bar-in 240ms var(--ease-smooth-out) 120ms backwards; }
+.crop.is-leaving .crop-bar { opacity: 0; transform: translateY(12px); transition: opacity 140ms ease-out, transform 180ms var(--ease-smooth-out); }
+@keyframes crop-chrome-in { from { opacity: 0; } }
+@keyframes crop-bar-in { from { opacity: 0; transform: translateY(12px); } }
+@media (prefers-reduced-motion: reduce) { .preview, .crop-bar, .crop-handle { transition: none; animation: none; } }
 .crop-image img { display: block; width: 100%; height: 100%; pointer-events: none; }
 .crop-shade { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .crop-shade i { position: absolute; box-shadow: 0 0 0 9999px rgba(20, 20, 24, .55); }
@@ -313,8 +336,8 @@
 .how kbd { min-width: 20px; height: 20px; padding: 0 6px; display: inline-grid; place-items: center; border-radius: 6px; background: var(--fill); box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .06); font: 500 12px / 1 var(--font); color: var(--text-secondary); }
 
 .how-scene { position: relative; height: 200px; overflow: hidden; border-radius: calc(var(--r-xl) - 8px); background: #ececee; }
-.how-canvas { position: absolute; inset: 22px 30px; border-radius: 12px; transition: transform var(--how-move); }
-.how-bg { position: absolute; inset: 0; border-radius: inherit; opacity: 0; background: linear-gradient(135deg, var(--how-a), var(--how-b)); transition: opacity var(--how-move), --how-a var(--how-move), --how-b var(--how-move); }
+.how-canvas { position: absolute; inset: 22px 30px; border-radius: 12px; transition: transform var(--how-move), opacity var(--how-move), filter var(--how-move); }
+.how-bg { position: absolute; inset: 0; opacity: 0; background: linear-gradient(135deg, var(--how-a), var(--how-b)); transition: opacity var(--how-move), --how-a var(--how-move), --how-b var(--how-move); }
 .how-window { position: absolute; top: 50%; left: 50%; width: 70%; translate: -50% -50%; overflow: hidden; border-radius: 6px; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .08); transition: width var(--how-move), border-radius var(--how-move), box-shadow var(--how-move), transform var(--how-move); }
 .how-window-bar { height: 0; display: flex; align-items: center; gap: 4px; padding: 0 9px; overflow: hidden; transition: height var(--how-move); }
 .how-window-bar i { width: 6px; height: 6px; flex: none; border-radius: 50%; background: #ff625a; }
@@ -333,15 +356,18 @@
 .how-tilt { left: 16px; bottom: 16px; padding: 8px; border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-float); transform: translateY(10px) scale(.94); }
 .how-pad { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; box-shadow: var(--groove); }
 .how-pad i { width: 26px; height: 26px; border-radius: 50%; background: var(--knob); box-shadow: var(--grip-shadow); transition: transform 320ms var(--ease-smooth-out); }
-.how-export { top: 50%; right: 18px; width: 150px; margin-top: -50px; padding: 8px; display: flex; flex-direction: column; gap: 6px; border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-float); transform: translateX(-28px) scale(.9); transform-origin: left center; }
+.how-export { bottom: 14px; left: 50%; width: 288px; margin-left: -144px; padding: 6px 14px 14px; border-radius: 18px; background: var(--surface); box-shadow: 0 0 0 1px rgba(0, 0, 0, .05), 0 16px 40px rgba(0, 0, 0, .14); transform: translateY(12px) scale(.96); }
+.how-row { height: 36px; display: flex; align-items: center; justify-content: space-between; font: 500 12px / 1 var(--font); color: var(--text-secondary); }
 .how-seg { display: flex; padding: 2px; border-radius: 999px; background: var(--fill); }
-.how-seg span { flex: 1; height: 20px; display: grid; place-items: center; border-radius: 999px; font: 500 10px / 1 var(--font); color: var(--text-secondary); }
-.how-seg span.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
-.how-download { height: 26px; display: grid; place-items: center; border-radius: 8px; background: var(--ink); color: var(--on-ink); font: 600 11px / 1 var(--font); }
+.how-seg span { height: 24px; padding: 0 10px; display: grid; place-items: center; border-radius: 999px; font: 500 11px / 1 var(--font); color: var(--text-secondary); }
+.how-seg span.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0, 0, 0, .08), 0 0 0 1px rgba(0, 0, 0, .04); }
+.how-buttons { display: grid; grid-template-columns: 1fr 1.7fr; gap: 6px; margin-top: 6px; }
+.how-buttons span { height: 32px; display: grid; place-items: center; border-radius: 999px; background: var(--fill); font: 500 12px / 1 var(--font); color: var(--text); }
+.how-buttons span.dark { background: var(--ink); color: var(--on-ink); }
 
 /* 1 Add: a plain screenshot, and the paste key beside it. */
 .how-scene[data-step="0"] .how-paste { opacity: 1; transform: none; }
-/* 2 Style: the background fades in behind it, and it gains its window bar and shadow. */
+/* 2 Style: the background fades in and fills the whole tile, and the screenshot gains its window bar and shadow. */
 .how-scene:not([data-step="0"]) .how-bg { opacity: 1; }
 .how-scene:not([data-step="0"]) .how-window { width: 64%; border-radius: 9px; box-shadow: 0 18px 36px -10px rgba(20, 24, 40, .3), 0 0 0 1px rgba(0, 0, 0, .04); }
 .how-scene:not([data-step="0"]) .how-window-bar { height: 18px; }
@@ -350,9 +376,10 @@
 .how-scene[data-step="2"] .how-window { transform: perspective(700px) rotateX(12deg) rotateY(-18deg); }
 .how-scene[data-step="2"] .how-tilt { opacity: 1; transform: none; }
 .how-scene[data-step="2"] .how-pad i { transform: translate(-7px, -6px); transition-delay: 120ms; }
-/* 4 Export: the picture shrinks to a thumbnail and the export card grows out from behind it as the tilt pad leaves. */
-.how-scene[data-step="3"] .how-canvas { transform: translateX(-84px) scale(.56); }
-.how-scene[data-step="3"] .how-export { opacity: 1; transform: none; transition-delay: 40ms; }
+/* 4 Export: depth, like parallax. The picture pushes back and up (smaller, dimmer, softer) while the export card
+   rises into place in front of it from just below. The tilt pad leaves as it comes. */
+.how-scene[data-step="3"] .how-canvas { transform: translateY(-42px) scale(.78); opacity: .75; filter: blur(1px); }
+.how-scene[data-step="3"] .how-export { opacity: 1; transform: none; transition: opacity 180ms ease 30ms, transform 320ms var(--ease-bounce) 30ms; } /* starts nearly in place and settles with a ~1px overshoot */
 
 /* All four steps sit in one grid cell, so the area is as tall as the tallest and never changes height. */
 .how-text { display: grid; margin-top: 18px; }

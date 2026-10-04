@@ -7,8 +7,8 @@ import { useConfetti } from "./confetti";
 import { CropEditor } from "./crop";
 import { HowItWorks } from "./how-it-works";
 import { MorphText } from "./morph-text";
-import { ColorChip, Icon, IconButton, Menu, PositionGrid, ResizeHandle, Segmented, Slider, SliderRow, TiltPad } from "./controls";
-import { type Asset, type Settings, anchorOffsets, canvasDimensions, clamp, DEFAULT_SETTINGS, GRADIENTS, INITIAL_DOCUMENT, RATIOS, SOLIDS } from "@/lib/editor-state";
+import { ColorChip, type Corner, Icon, IconButton, Menu, PositionGrid, ResizeHandle, Segmented, Slider, SliderRow, TiltPad } from "./controls";
+import { type Asset, type Rect, type Settings, anchorOffsets, canvasDimensions, clamp, DEFAULT_SETTINGS, GRADIENTS, INITIAL_DOCUMENT, RATIOS, SOLIDS, visibleRect } from "@/lib/editor-state";
 import { clearSavedDocument, loadStyle, saveStyle } from "@/lib/storage";
 import { HOME_HREF, rememberEditor } from "@/lib/returning";
 import { renderImage } from "@/lib/render";
@@ -66,6 +66,8 @@ export function Editor() {
   const [dropping, setDropping] = useState(false);
   const [resizing, setResizing] = useState(false);
   const [cropping, setCropping] = useState(false);
+  const [cropFrom, setCropFrom] = useState<DOMRect | null>(null);
+  const [cropLeaving, setCropLeaving] = useState<Rect | null>(null);
   const artboard = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -73,7 +75,7 @@ export function Editor() {
   const copiedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const importId = useRef(0);
   const drag = useRef<{ clientX: number; clientY: number; x: number; y: number; width: number; height: number } | null>(null);
-  const sizing = useRef<{ clientX: number; clientY: number; width: number; height: number; maxWidth: number; maxHeight: number } | null>(null);
+  const sizing = useRef<{ clientX: number; clientY: number; sx: number; sy: number; width: number; height: number; maxWidth: number; maxHeight: number } | null>(null);
   const touches = useRef(new Map<number, { x: number; y: number }>());
   const pinch = useRef<{ gap: number; size: number } | null>(null);
   const wheelSize = useRef<number | null>(null);
@@ -122,12 +124,14 @@ export function Editor() {
   const setAsset = useCallback((asset: Asset, name: string) => {
     update(d => ({ ...d, asset, name, settings: { ...d.settings, x: 0, y: 0 } }));
     setCropping(false);
+    setCropLeaving(null);
   }, [update]);
 
   // Undoable instead of confirmed: the toast offers Undo, and ⌘Z works too. Style settings stay for the next image.
   const removeImage = useCallback(() => {
     update(d => ({ ...d, asset: null, name: "Untitled", settings: { ...d.settings, x: 0, y: 0 } }));
     setCropping(false);
+    setCropLeaving(null);
     setMenu(null);
     notify("Image removed", true);
   }, [update, notify]);
@@ -322,15 +326,36 @@ export function Editor() {
     return () => el.removeEventListener("wheel", wheel);
   }, [doc.asset, s.size, begin, end, change]);
 
-  // The canvas grows from its center, so the corner moves half as far as the size changes.
-  function startResize(e: PointerEvent<HTMLButtonElement>) {
+  // Crop grows out of the screenshot and goes back into it. The morph needs the card flat; tilted or rotated, the crop
+  // view dissolves instead (shotImage returns null).
+  const shotImage = useCallback(() => {
+    if (s.rotation || s.tiltX || s.tiltY) return null;
+    return artboard.current?.querySelector(".shot-crop")?.getBoundingClientRect() ?? null;
+  }, [s.rotation, s.tiltX, s.tiltY]);
+  function openCrop() {
+    setCropFrom(shotImage());
+    setCropLeaving(null);
+    setCropping(true);
+  }
+  // `crop` undefined means cancel; null means the whole image.
+  function leaveCrop(crop?: Rect | null) {
+    if (!doc.asset || cropLeaving) return;
+    const asset = doc.asset;
+    if (crop !== undefined) update(d => d.asset ? { ...d, asset: { ...d.asset, crop } } : d);
+    setCropLeaving(crop === undefined ? visibleRect(asset) : crop ?? { x: 0, y: 0, width: asset.width, height: asset.height });
+  }
+  const cropLeft = useCallback(() => { setCropping(false); setCropLeaving(null); }, []);
+
+  // The canvas grows from its center, so the corner moves half as far as the size changes. Any corner works:
+  // dragging it away from the center grows the canvas.
+  function startResize(e: PointerEvent<HTMLButtonElement>, corner: Corner) {
     const el = stage.current;
     if (e.button !== 0 || !el) return;
     e.preventDefault();
     begin();
     setResizing(true);
     e.currentTarget.setPointerCapture(e.pointerId);
-    sizing.current = { clientX: e.clientX, clientY: e.clientY, width: dims.width, height: dims.height,
+    sizing.current = { clientX: e.clientX, clientY: e.clientY, sx: corner.includes("e") ? 1 : -1, sy: corner.includes("s") ? 1 : -1, width: dims.width, height: dims.height,
       maxWidth: Math.min(4096, (el.clientWidth - 16) / fit), maxHeight: Math.min(4096, (el.clientHeight - 16) / fit) };
   }
   function moveResize(e: PointerEvent<HTMLButtonElement>) {
@@ -338,8 +363,8 @@ export function Editor() {
     if (!r) return;
     if (!(e.buttons & 1)) { endResize(e); return; }
     change({ ratio: "custom",
-      width: Math.round(clamp(r.width + 2 * (e.clientX - r.clientX) / fit, 320, Math.max(320, r.maxWidth))),
-      height: Math.round(clamp(r.height + 2 * (e.clientY - r.clientY) / fit, 320, Math.max(320, r.maxHeight))) });
+      width: Math.round(clamp(r.width + 2 * r.sx * (e.clientX - r.clientX) / fit, 320, Math.max(320, r.maxWidth))),
+      height: Math.round(clamp(r.height + 2 * r.sy * (e.clientY - r.clientY) / fit, 320, Math.max(320, r.maxHeight))) });
   }
   function endResize(e: PointerEvent<HTMLButtonElement>) {
     if (!sizing.current) return;
@@ -384,7 +409,7 @@ export function Editor() {
           </div>
           <div className="bar-actions">
             {doc.asset && <>
-              <button type="button" className="button ghost" aria-pressed={cropping} onClick={() => { setMenu(null); setCropping(c => !c); }}>Crop</button>
+              <button type="button" className="button ghost" aria-pressed={cropping && !cropLeaving} onClick={() => { setMenu(null); if (cropping) leaveCrop(); else openCrop(); }}>Crop</button>
               <button type="button" className="button ghost" title="Replace image (⌘O)" onClick={() => fileInput.current?.click()}>Replace</button>
               <IconButton label="Remove image" icon={Delete02Icon} onClick={removeImage} />
             </>}
@@ -411,18 +436,19 @@ export function Editor() {
         </header>
 
         <div className="stage" ref={stage} onPointerDownCapture={pinchDown} onPointerMoveCapture={pinchMove} onPointerUpCapture={pinchUp} onPointerCancelCapture={pinchUp}>
-          {doc.asset && cropping ? <CropEditor asset={doc.asset} onCancel={() => setCropping(false)}
-            onApply={crop => { update(d => d.asset ? { ...d, asset: { ...d.asset, crop } } : d); setCropping(false); }} />
-          : doc.asset ? <div className="preview" style={{ width: dims.width * fit, height: dims.height * fit }}>
-            <div className="preview-scaler" style={{ transform: `scale(${fit})` }}>
-              <Artboard settings={s} asset={doc.asset} artboardRef={artboard} dragging={dragging} adjusting={adjusting} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} />
+          {doc.asset ? <><div className={`preview ${cropping && !cropLeaving ? "is-behind" : ""}`} inert={cropping} data-cropping={cropping || undefined} data-resizing={resizing || undefined} style={{ width: dims.width * fit, height: dims.height * fit }}>
+            <div className="preview-clip">
+              <div className="preview-scaler" style={{ transform: `scale(${fit})` }}>
+                <Artboard settings={s} asset={doc.asset} artboardRef={artboard} dragging={dragging} adjusting={adjusting} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} />
+              </div>
             </div>
-            <div className="resize-corner">
-              <ResizeHandle label="Resize canvas" hint="Drag to resize canvas" active={resizing}
-                onPointerDown={startResize} onPointerMove={moveResize} onPointerUp={endResize} onLostPointerCapture={endResize} onKeyDown={keyResize} onKeyUp={end} />
-            </div>
+            {(["nw", "ne", "se", "sw"] as const).map(corner => <ResizeHandle key={corner} corner={corner} label="Resize canvas" focusable={corner === "se"}
+              onPointerDown={e => startResize(e, corner)} onPointerMove={moveResize} onPointerUp={endResize} onLostPointerCapture={endResize} onKeyDown={keyResize} onKeyUp={end} />)}
             {dragging && <div className="guides">{s.x === 0 && <i className="guide vertical" />}{s.y === 0 && <i className="guide horizontal" />}</div>}
-          </div> : <div className="empty">
+          </div>
+          {cropping && <CropEditor asset={doc.asset} from={cropFrom} leaving={cropLeaving} target={shotImage}
+            onCancel={() => leaveCrop()} onApply={crop => leaveCrop(crop)} onLeft={cropLeft} />}
+          </> : <div className="empty">
             <p className="empty-title">Add a screenshot</p>
             <p className="empty-hint">Drop an image here, or paste one with ⌘V.</p>
             <div className="empty-actions">

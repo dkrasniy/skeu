@@ -202,34 +202,18 @@ export function Menu({ open, onClose, label, origin, className = "", children }:
 
 type HandleEvents = Pick<ComponentProps<"button">, "onPointerDown" | "onPointerMove" | "onPointerUp" | "onLostPointerCapture" | "onKeyDown" | "onKeyUp">;
 
-// transitions.dev "Tooltip": the bubble is measured and placed while hidden, so only the appear animates.
-export function ResizeHandle({ label, hint, active, ...events }: { label: string; hint: string; active: boolean } & HandleEvents) {
-  const id = useId();
-  const group = useRef<HTMLSpanElement>(null);
-  const tip = useRef<HTMLSpanElement>(null);
-  const [hovered, setHovered] = useState(false);
-  const show = hovered && !active;
+export type Corner = "nw" | "ne" | "se" | "sw";
+const CORNER_TURN: Record<Corner, number> = { nw: 0, ne: 90, se: 180, sw: 270 };
 
-  function place(trigger: HTMLElement) {
-    const g = group.current;
-    const t = tip.current;
-    const text = t?.firstElementChild;
-    if (!g || !t || !text) return;
-    const cs = getComputedStyle(t);
-    const width = Math.ceil(text.scrollWidth + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight));
-    // Right-aligned rather than centered: the handle sits in the canvas corner.
-    const x = trigger.getBoundingClientRect().right - g.getBoundingClientRect().left - width;
-    t.style.transition = "none";
-    t.style.width = `${width}px`;
-    t.style.setProperty("--tt-x", `${x}px`);
-    void t.offsetWidth;
-    t.style.transition = "";
-    setHovered(true);
-  }
-
-  return <span ref={group} className="t-tt-group" onPointerLeave={() => setHovered(false)}>
-    <button type="button" className="t-tt-trigger resize-grip" aria-label={label} aria-describedby={id}
-      onPointerEnter={e => place(e.currentTarget)} onFocus={e => place(e.currentTarget)} onBlur={() => setHovered(false)} {...events} />
-    <span ref={tip} id={id} className="t-tt" role="tooltip" aria-hidden={!show} data-show={show}><span className="t-tt-text">{hint}</span></span>
-  </span>;
+// A canvas corner handle: a rounded bracket hugging the corner from just outside, like iOS crop handles.
+// It's concentric with the canvas corner: outer radius = inner radius + gap, so 12px + 8px = a 20px curve sharing
+// the canvas corner's center. Only the middle 50° of that curve is drawn (a short arc across the corner's diagonal).
+// The canvas corner sits at (12, 12) in the 32px box.
+// Only one corner takes keyboard focus (arrow keys resize), so tabbing doesn't stop four times.
+export function ResizeHandle({ corner, label, focusable, ...events }: { corner: Corner; label: string; focusable?: boolean } & HandleEvents) {
+  return <button type="button" className="resize-handle" data-corner={corner} aria-label={label} tabIndex={focusable ? 0 : -1} {...events}>
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true" style={{ rotate: `${CORNER_TURN[corner]}deg` }}>
+      <path d="M5.2 17.2A20 20 0 0 1 17.2 5.2" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
+    </svg>
+  </button>;
 }

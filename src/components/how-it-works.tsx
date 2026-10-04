@@ -8,7 +8,7 @@ import { MorphText } from "./morph-text";
 
 // "How it works": four steps in a dialog. Every step shows the same screenshot, so the picture above the text is one
 // scene that changes shape instead of four pictures: the plain screenshot gets a background and a window bar, tilts,
-// then shrinks to a thumbnail while the export card grows out from behind it. The text below dissolves (old fades out
+// then sinks back behind the export card as it rises over it. The text below dissolves (old fades out
 // in place, new fades in from .97). Every step has the same shape of text, and all four share one area sized to the
 // tallest, so the height never changes and Next stays under your pointer. The close button, dots and footer stay put.
 
@@ -89,8 +89,8 @@ export function HowItWorks({ open, onClose }: { open: boolean; onClose: () => vo
 // One drawing for all four steps; CSS moves its pieces by data-step. The screenshot is the hub everything flows through.
 function Scene({ step }: { step: number }) {
   return <div className="how-scene" data-step={step} aria-hidden="true">
+    <div className="how-bg" />
     <div className="how-canvas">
-      <div className="how-bg" />
       <div className="how-window">
         <div className="how-window-bar"><i /><i /><i /></div>
         <div className="how-window-body">
@@ -102,9 +102,9 @@ function Scene({ step }: { step: number }) {
     <span className="how-paste"><kbd>⌘</kbd><kbd>V</kbd></span>
     <div className="how-tilt"><span className="how-pad"><i /></span></div>
     <div className="how-export">
-      <div className="how-seg"><span className="on">PNG</span><span>JPG</span><span>WebP</span></div>
-      <div className="how-seg"><span>1×</span><span className="on">2×</span><span>3×</span></div>
-      <span className="how-download">Download</span>
+      <div className="how-row"><span>Format</span><span className="how-seg"><span className="on">PNG</span><span>JPG</span><span>WebP</span></span></div>
+      <div className="how-row"><span>Scale</span><span className="how-seg"><span>1×</span><span className="on">2×</span><span>3×</span></span></div>
+      <div className="how-buttons"><span>Copy</span><span className="dark">Download PNG</span></div>
     </div>
   </div>;
 }

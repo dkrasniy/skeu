@@ -9,12 +9,30 @@ const EDGES: Edge[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 const MIN_SIZE = 32;
 const SNAP = 6; // screen pixels; hold ⇧, ⌃, ⌥ or ⌘ to drag freely
 
-export function CropEditor({ asset, onApply, onCancel }: { asset: Asset; onApply: (crop: Rect | null) => void; onCancel: () => void }) {
+const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+
+// The crop view grows out of the screenshot instead of replacing it. `from` is where the visible part of the image
+// sits in the editor; the crop box starts exactly there and the cropped-away edges unfold around it. When `leaving`
+// is set (the rect that will show), it flies back to `target()` and calls `onLeft`. Without a `from` (a tilted or
+// rotated card, where the shapes don't line up) it dissolves instead.
+export function CropEditor({ asset, from, leaving, target, onApply, onCancel, onLeft }: {
+  asset: Asset;
+  from: DOMRect | null;
+  leaving: Rect | null;
+  target: () => DOMRect | null;
+  onApply: (crop: Rect | null) => void;
+  onCancel: () => void;
+  onLeft: () => void;
+}) {
   const [rect, setRect] = useState<Rect>(() => visibleRect(asset));
   const [scale, setScale] = useState(0);
   const [edges, setEdges] = useState<Edges | null>(null);
   const [guides, setGuides] = useState<{ x: number | null; y: number | null }>({ x: null, y: null });
   const box = useRef<HTMLDivElement>(null);
+  const image = useRef<HTMLDivElement>(null);
+  const entered = useRef(false);
+  const exit = useRef({ target, onLeft });
+  useEffect(() => { exit.current = { target, onLeft }; }, [target, onLeft]);
   const drag = useRef<{ edge: Edge | "move"; clientX: number; clientY: number; start: Rect } | null>(null);
   const whole = rect.x === 0 && rect.y === 0 && rect.width === asset.width && rect.height === asset.height;
   const apply = () => onApply(whole ? null : rect);
@@ -29,6 +47,30 @@ export function CropEditor({ asset, onApply, onCancel }: { asset: Asset; onApply
     return () => observer.disconnect();
   }, [asset.width, asset.height]);
 
+  // In: from the screenshot's place in the editor (or a plain dissolve).
+  useLayoutEffect(() => {
+    const el = image.current;
+    if (!el || !scale || entered.current) return;
+    entered.current = true;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    el.animate(from ? [frame(el, from, rect, scale), FULL] : DISSOLVE, { duration: 250, easing: EASE });
+  }, [scale, from, rect]);
+
+  // Out: back into the editor at the rect that will show. It waits a frame so the editor has re-fit the canvas to the
+  // new crop before its spot is measured.
+  useEffect(() => {
+    const el = image.current;
+    if (!leaving) return;
+    if (!el || !scale || matchMedia("(prefers-reduced-motion: reduce)").matches) { exit.current.onLeft(); return; }
+    let anim: Animation | undefined;
+    const start = requestAnimationFrame(() => {
+      const to = exit.current.target();
+      anim = el.animate(to ? [FULL, frame(el, to, leaving, scale)] : [...DISSOLVE].reverse(), { duration: 220, easing: EASE, fill: "forwards" });
+      anim.onfinish = () => exit.current.onLeft();
+    });
+    return () => { cancelAnimationFrame(start); anim?.cancel(); };
+  }, [leaving, scale]);
+
   useEffect(() => {
     let live = true;
     findEdges(asset.src, asset.width, asset.height).then(found => { if (live) setEdges(found); }, () => { /* no snapping */ });
@@ -36,13 +78,14 @@ export function CropEditor({ asset, onApply, onCancel }: { asset: Asset; onApply
   }, [asset.src, asset.width, asset.height]);
 
   useEffect(() => {
+    if (leaving) return;
     const key = (e: KeyboardEvent) => {
       if (e.key === "Escape") onCancel();
       else if (e.key === "Enter") { e.preventDefault(); onApply(whole ? null : rect); }
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [onApply, onCancel, rect, whole]);
+  }, [onApply, onCancel, rect, whole, leaving]);
 
   function grab(edge: Edge | "move", e: PointerEvent<HTMLElement>) {
     if (e.button !== 0) return;
@@ -86,9 +129,9 @@ export function CropEditor({ asset, onApply, onCancel }: { asset: Asset; onApply
     setGuides({ x: null, y: null });
   }
 
-  return <div ref={box} className="crop">
+  return <div ref={box} className={`crop ${leaving ? "is-leaving" : ""}`} inert={!!leaving}>
     {scale > 0 && <>
-      <div className="crop-image" style={{ width: asset.width * scale, height: asset.height * scale }}>
+      <div ref={image} className="crop-image" style={{ width: asset.width * scale, height: asset.height * scale }}>
         <img src={asset.src} alt={asset.name} draggable={false} />
         <div className="crop-shade"><i style={{ left: rect.x * scale, top: rect.y * scale, width: rect.width * scale, height: rect.height * scale }} /></div>
         {guides.x !== null && <i className="crop-guide vertical" style={{ left: guides.x * scale }} />}
@@ -107,4 +150,17 @@ export function CropEditor({ asset, onApply, onCancel }: { asset: Asset; onApply
       </div>
     </>}
   </div>;
+}
+
+const FULL = { transform: "none", clipPath: "inset(0px 0px 0px 0px)" };
+const DISSOLVE = [{ opacity: 0, transform: "scale(.97)" }, { opacity: 1, transform: "none" }];
+
+// The transform and clip that put `r` (image pixels) of the crop view exactly over `screen`, with everything outside
+// `r` clipped away. The element's transform origin is its top-left corner.
+function frame(el: HTMLElement, screen: DOMRect, r: Rect, scale: number) {
+  const box = el.getBoundingClientRect();
+  const k = screen.width / (r.width * scale);
+  const tx = screen.left - box.left - r.x * scale * k, ty = screen.top - box.top - r.y * scale * k;
+  const clip = `inset(${r.y * scale}px ${box.width - (r.x + r.width) * scale}px ${box.height - (r.y + r.height) * scale}px ${r.x * scale}px)`;
+  return { transform: `translate(${tx}px, ${ty}px) scale(${k})`, clipPath: clip };
 }
