@@ -16,10 +16,10 @@ const LEAVE_MS = 150;
 
 // Same shape for every step: a title, about two lines, and one small line for a shortcut or a tip.
 const STEPS: { title: string; text: string; note: string }[] = [
-  { title: "How it works", text: "Drag and drop any screenshot onto the canvas, or paste it in, to start editing.", note: "⌘V to paste, ⌘O to open a file" },
-  { title: "Give it a style", text: "Pick a background and a frame, then add a soft shadow.", note: "Your style is kept for next time" },
-  { title: "Tilt it and place it", text: "Drag the tilt pad to angle it toward the viewer, then move it anywhere on the canvas.", note: "Crop trims the image itself" },
-  { title: "Copy or download", text: "Copy it straight into a post, or download it as a PNG, JPG or WebP.", note: "⌘C to copy, ⌘S to download" },
+  { title: "Add a screenshot", text: "Drop it on the canvas, paste it or choose a file. It never leaves your device.", note: "⌘V pastes, ⌘O opens a file." },
+  { title: "Give it a style", text: "Pick a frame, a background and a shadow. The canvas updates as you go.", note: "Your style is kept for next time." },
+  { title: "Tilt it and place it", text: "Drag the tilt pad to angle it in 3D, rotate it, or snap it to an edge or a corner.", note: "Crop trims the image itself." },
+  { title: "Copy or download", text: "Copy it into a post or a doc, or download a PNG, JPG or WebP at up to 3×.", note: "⌘C copies, ⌘S downloads." },
 ];
 
 export function HowItWorks({ open, onClose }: { open: boolean; onClose: () => void }) {

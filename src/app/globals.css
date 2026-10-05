@@ -337,7 +337,8 @@
 
 .how-scene { position: relative; height: 200px; overflow: hidden; border-radius: calc(var(--r-xl) - 8px); background: #ececee; }
 .how-canvas { position: absolute; inset: 22px 30px; border-radius: 12px; transition: transform var(--how-move), opacity var(--how-move), filter var(--how-move); }
-.how-bg { position: absolute; inset: 0; opacity: 0; background: linear-gradient(135deg, var(--how-a), var(--how-b)); transition: opacity var(--how-move), --how-a var(--how-move), --how-b var(--how-move); }
+/* The background blooms in rather than snapping: a slower, even fade while it settles from slightly enlarged. */
+.how-bg { position: absolute; inset: 0; opacity: 0; transform: scale(1.05); background: linear-gradient(135deg, var(--how-a), var(--how-b)); transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1), transform 400ms var(--ease-smooth-out), --how-a 300ms ease, --how-b 300ms ease; }
 .how-window { position: absolute; top: 50%; left: 50%; width: 70%; translate: -50% -50%; overflow: hidden; border-radius: 6px; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .08); transition: width var(--how-move), border-radius var(--how-move), box-shadow var(--how-move), transform var(--how-move); }
 .how-window-bar { height: 0; display: flex; align-items: center; gap: 4px; padding: 0 9px; overflow: hidden; transition: height var(--how-move); }
 .how-window-bar i { width: 6px; height: 6px; flex: none; border-radius: 50%; background: #ff625a; }
@@ -368,7 +369,7 @@
 /* 1 Add: a plain screenshot, and the paste key beside it. */
 .how-scene[data-step="0"] .how-paste { opacity: 1; transform: none; }
 /* 2 Style: the background fades in and fills the whole tile, and the screenshot gains its window bar and shadow. */
-.how-scene:not([data-step="0"]) .how-bg { opacity: 1; }
+.how-scene:not([data-step="0"]) .how-bg { opacity: 1; transform: none; }
 .how-scene:not([data-step="0"]) .how-window { width: 64%; border-radius: 9px; box-shadow: 0 18px 36px -10px rgba(20, 24, 40, .3), 0 0 0 1px rgba(0, 0, 0, .04); }
 .how-scene:not([data-step="0"]) .how-window-bar { height: 18px; }
 /* 3 Tilt: it angles in 3D on a new background as the tilt pad comes in, its knob moving in step with the tilt. */
