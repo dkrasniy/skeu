@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/about" },
   // A page's openGraph replaces the layout's whole, image included, so it repeats the shared parts.
   openGraph: { type: "website", siteName: "Skeu", url: "/about", title: "About Skeu", images: "/opengraph-image.png" },
+  twitter: { card: "summary_large_image", title: "About Skeu", images: "/opengraph-image.png" },
 };
 
 const faqData = {
