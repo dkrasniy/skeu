@@ -27,7 +27,7 @@ Screens are calm. Type, spacing and alignment carry the design, not color or dec
 - **Inputs: a muted fill, and a 1.5px inset line only when it means something.** The line has one width and only changes color. Hover doesn't change anything, so nothing flickers. No outer ring, no shadow.
   - **At rest:** just the theme's muted surface as the fill (the raised grey, `#f6f7f9` on white or `#383838` on dark), with no visible line.
   - **On focus:** the line turns the brand color, or the text color if there's no brand.
-  - **On error:** the line turns red, and a short message folds open under the field. It says what to do ("Enter an email address like name@example.com"), not what went wrong. Focus goes to the first wrong field.
+  - **On error:** the line turns red, and a short message folds open under the field. Focus goes to the first wrong field.
   - **Size:** a 48px field with 15px text (16px on touch screens, so iOS doesn't zoom on focus). The 13px medium label sits 6px above the field, in the normal text color, not muted. It names the field, so it has to read clearly.
 
 ## Continuity: animate only what changes

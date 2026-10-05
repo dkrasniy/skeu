@@ -16,5 +16,5 @@
 
 ## Pages
 
-- [Home](https://skeu.app): features and frequently asked questions
-- [Editor](https://skeu.app/editor): the app itself
+- [Editor](https://skeu.app): the app itself, at the home page
+- [About](https://skeu.app/about): features and frequently asked questions

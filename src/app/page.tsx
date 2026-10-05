@@ -1,4 +1,11 @@
-import { FAQ, Landing } from "@/components/landing";
+import type { Metadata } from "next";
+import { Editor } from "@/components/editor";
+
+// The editor is the home page; what Skeu is and its FAQ live at /about.
+export const metadata: Metadata = {
+  title: "Skeu.app",
+  alternates: { canonical: "/" },
+};
 
 const appData = {
   "@context": "https://schema.org",
@@ -13,15 +20,9 @@ const appData = {
   featureList: ["Light and dark window frames", "Adjustable shadows", "3D tilt and rotation", "Gradient and solid backgrounds", "Crop with edge snapping", "PNG, JPG and WebP export at up to 3×", "Copy to clipboard"],
 };
 
-const faqData = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQ.map(({ question, answer }) => ({ "@type": "Question", name: question, acceptedAnswer: { "@type": "Answer", text: answer } })),
-};
-
 export default function Home() {
   return <>
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify([appData, faqData]) }} />
-    <Landing />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(appData) }} />
+    <Editor />
   </>;
 }

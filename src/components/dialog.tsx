@@ -6,8 +6,9 @@ import { cssDuration, Icon } from "./controls";
 
 // The one dialog: a native <dialog> (top layer, focus kept inside) that opens and closes like the transitions.dev
 // modal. Escape, the close button and a click outside all close it. `onClosed` runs once it has gone, to reset
-// what's inside. On open, focus goes to the element marked data-autofocus, except on touch screens, where there's no
-// keyboard to move it and a ring would only look like a stray selection: there the dialog itself takes focus.
+// what's inside. Opened from the keyboard, focus goes to the element marked data-autofocus, so Enter and Tab carry on
+// from there. Opened by a click, a tap, or by itself (the first-visit tour), the dialog itself takes focus instead, so
+// no ring appears on a button nobody pressed.
 export function Dialog({ open, onClose, onClosed, labelledBy, className = "", onKeyDown, children }: {
   open: boolean;
   onClose: () => void;
@@ -30,7 +31,7 @@ export function Dialog({ open, onClose, onClosed, labelledBy, className = "", on
       d.classList.remove("is-closing");
       void d.offsetWidth;
       d.classList.add("is-open");
-      const start = touch() ? d : d.querySelector<HTMLElement>("[data-autofocus]") ?? d;
+      const start = usingKeyboard && !touch() ? d.querySelector<HTMLElement>("[data-autofocus]") ?? d : d;
       start.focus({ preventScroll: true });
       return;
     }
@@ -72,3 +73,10 @@ export function fitTo(box: HTMLElement, content: HTMLElement, width = false) {
 
 // Touch screens: there's no keyboard to move focus, so nothing gets focused (and ringed) on its own.
 export const touch = () => matchMedia("(pointer: coarse)").matches;
+
+// Whether the last thing the person did was on the keyboard, so a dialog knows how it was opened.
+let usingKeyboard = false;
+if (typeof window !== "undefined") {
+  window.addEventListener("keydown", () => { usingKeyboard = true; }, true);
+  window.addEventListener("pointerdown", () => { usingKeyboard = false; }, true);
+}

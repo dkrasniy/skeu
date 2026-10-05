@@ -355,7 +355,7 @@
 .how-paste { right: 46px; bottom: 24px; display: flex; gap: 3px; padding: 5px; border-radius: 10px; background: var(--surface); box-shadow: var(--shadow-float); transform: translateY(6px) scale(.9); }
 .how-tilt { left: 16px; bottom: 16px; padding: 8px; border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-float); transform: translateY(10px) scale(.94); }
 .how-pad { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; box-shadow: var(--groove); }
-.how-pad i { width: 26px; height: 26px; border-radius: 50%; background: var(--knob); box-shadow: var(--grip-shadow); transition: transform 320ms var(--ease-smooth-out); }
+.how-pad i { width: 26px; height: 26px; border-radius: 50%; background: var(--knob); box-shadow: var(--grip-shadow); transition: transform var(--how-move); }
 .how-export { bottom: 14px; left: 50%; width: 288px; margin-left: -144px; padding: 6px 14px 14px; border-radius: 18px; background: var(--surface); box-shadow: 0 0 0 1px rgba(0, 0, 0, .05), 0 16px 40px rgba(0, 0, 0, .14); transform: translateY(12px) scale(.96); }
 .how-row { height: 36px; display: flex; align-items: center; justify-content: space-between; font: 500 12px / 1 var(--font); color: var(--text-secondary); }
 .how-seg { display: flex; padding: 2px; border-radius: 999px; background: var(--fill); }
@@ -371,11 +371,25 @@
 .how-scene:not([data-step="0"]) .how-bg { opacity: 1; }
 .how-scene:not([data-step="0"]) .how-window { width: 64%; border-radius: 9px; box-shadow: 0 18px 36px -10px rgba(20, 24, 40, .3), 0 0 0 1px rgba(0, 0, 0, .04); }
 .how-scene:not([data-step="0"]) .how-window-bar { height: 18px; }
-/* 3 Tilt: it angles in 3D on a new background; the tilt pad comes in, and its knob settles a beat later. */
+/* 3 Tilt: it angles in 3D on a new background as the tilt pad comes in, its knob moving in step with the tilt. */
 .how-scene[data-step="2"] .how-bg, .how-scene[data-step="3"] .how-bg { --how-a: #e9cbff; --how-b: #aba5ef; }
 .how-scene[data-step="2"] .how-window { transform: perspective(700px) rotateX(12deg) rotateY(-18deg); }
 .how-scene[data-step="2"] .how-tilt { opacity: 1; transform: none; }
-.how-scene[data-step="2"] .how-pad i { transform: translate(-7px, -6px); transition-delay: 120ms; }
+.how-scene[data-step="2"] .how-pad i { transform: translate(-7px, -6px); } /* moves with the window's tilt, same timing, as if driving it */
+/* Once there, it keeps demonstrating: the knob drifts between three spots, pausing at each, and the window follows
+   exactly (1px of knob = about 2.5° of tilt), as if someone were still dragging it. Starts as the arrival settles. */
+.how-scene[data-step="2"] .how-window { animation: how-tilt-window 6.4s cubic-bezier(0.45, 0, 0.55, 1) 500ms infinite; }
+.how-scene[data-step="2"] .how-pad i { animation: how-tilt-knob 6.4s cubic-bezier(0.45, 0, 0.55, 1) 500ms infinite; }
+@keyframes how-tilt-window {
+  0%, 14%, 100% { transform: perspective(700px) rotateX(12deg) rotateY(-18deg); }
+  33%, 47% { transform: perspective(700px) rotateX(8deg) rotateY(15deg); }
+  66%, 80% { transform: perspective(700px) rotateX(-12deg) rotateY(4deg); }
+}
+@keyframes how-tilt-knob {
+  0%, 14%, 100% { transform: translate(-7px, -6px); }
+  33%, 47% { transform: translate(6px, -4px); }
+  66%, 80% { transform: translate(2px, 6px); }
+}
 /* 4 Export: depth, like parallax. The picture pushes back and up (smaller, dimmer, softer) while the export card
    rises into place in front of it from just below. The tilt pad leaves as it comes. */
 .how-scene[data-step="3"] .how-canvas { transform: translateY(-42px) scale(.78); opacity: .75; filter: blur(1px); }
@@ -394,7 +408,7 @@
 .how-dots i.on { width: 18px; background: var(--text); }
 .how-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .how-actions .anchor { display: grid; }
-@media (prefers-reduced-motion: reduce) { .how-scene *, .how-dots i { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { .how-scene *, .how-dots i { transition: none !important; animation: none !important; } }
 
 /* Login (a test of Family ConnectKit's nested pages): the palette is ConnectKit's light theme, and pages dissolve
    in place while the box resizes from its center. */

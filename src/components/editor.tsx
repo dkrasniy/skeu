@@ -9,8 +9,7 @@ import { HowItWorks } from "./how-it-works";
 import { MorphText } from "./morph-text";
 import { ColorChip, type Corner, Icon, IconButton, Menu, PositionGrid, ResizeHandle, Segmented, Slider, SliderRow, TiltPad } from "./controls";
 import { type Asset, type Rect, type Settings, anchorOffsets, canvasDimensions, clamp, DEFAULT_SETTINGS, GRADIENTS, INITIAL_DOCUMENT, RATIOS, SOLIDS, visibleRect } from "@/lib/editor-state";
-import { clearSavedDocument, loadStyle, saveStyle } from "@/lib/storage";
-import { HOME_HREF, rememberEditor } from "@/lib/returning";
+import { clearSavedDocument, loadStyle, markTourSeen, saveStyle, tourSeen } from "@/lib/storage";
 import { renderImage } from "@/lib/render";
 import { fitImage, MAX_SIDE } from "@/lib/image";
 import { useHistory } from "@/lib/use-history";
@@ -45,15 +44,17 @@ const isDefault = (s: Settings, keys: readonly (keyof Settings)[]) => keys.every
 const defaults = (keys: readonly (keyof Settings)[]): Partial<Settings> => Object.fromEntries(keys.map(k => [k, DEFAULT_SETTINGS[k]]));
 // Opens the home page in a new tab: the image lives only in this page, so leaving it would lose the work.
 function Logo() {
-  return <a className="logo" href={HOME_HREF} target="_blank" rel="noopener" aria-label="About Skeu"><img src="/logo.svg" alt="" width={24} height={24} /></a>;
+  return <a className="logo" href="/about" target="_blank" rel="noopener" aria-label="About Skeu"><img src="/logo.svg" alt="" width={24} height={24} /></a>;
 }
 
 export function Editor() {
   const { doc, update, begin, end, undo, redo, restore, adjusting, canUndo, canRedo } = useHistory();
   const s = doc.settings;
   const backgroundTray = useRef<HTMLElement>(null);
-  const [helpOpen, setHelpOpen] = useState(false);
-  const closeHelp = useCallback(() => setHelpOpen(false), []);
+  // A first visit opens with the How it works tour; closing it (Done, the close button or Escape) means it won't open
+  // by itself again.
+  const [helpOpen, setHelpOpen] = useState(() => typeof window !== "undefined" && !tourSeen());
+  const closeHelp = useCallback(() => { setHelpOpen(false); markTourSeen(); }, []);
   const [menu, setMenu] = useState<"size" | "export" | "shadow" | null>(null);
   const [toast, setToast] = useState<{ text: string; open: boolean; undoable: boolean }>({ text: "", open: false, undoable: false });
   const [format, setFormat] = useState<ImageFormat>("png");
@@ -97,7 +98,6 @@ export function Editor() {
   // Each visit starts with an empty canvas; only the style carries over.
   useEffect(() => {
     clearSavedDocument();
-    rememberEditor();
     const style = loadStyle();
     if (style) restore({ ...INITIAL_DOCUMENT, settings: style });
     return () => { clearTimeout(toastTimer.current); clearTimeout(copiedTimer.current); clearTimeout(wheelTimer.current); };
