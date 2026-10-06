@@ -55,7 +55,7 @@ Screens are calm. Type, spacing and alignment carry the design, not color or dec
 
 ## Feel: quick and quiet
 
-- **Timing:** 150–250ms with a smooth ease-out (`cubic-bezier(0.22, 1, 0.36, 1)`). Closing is about as fast as opening, or faster.
+- **Timing:** fades take 100–150ms. Movement uses a smooth ease-out (`cubic-bezier(0.22, 1, 0.36, 1)`) over 250–450ms, which does most of its travel in the first 150ms, so it still feels quick. Closing is about as fast as opening, or faster. For full choreography (stagger, direction, sheets, measured timings), see the fluid-interfaces skill.
 - **Overshoot:** at most 1–2px or a few percent. If you can see the bounce, it's too much. Use springy pops only for rare moments (see below), never for routine controls.
 - **Pressed state:** a slight dip to 97% scale is enough feedback for a press. Don't add a second effect on top of it.
 - **Selection:** a calm grey ring outside the item, with a thin gap in the surface color so the item stays fully visible. It opens out from the item's edge in about 150ms. Avoid default-looking black outlines and checkmarks that cover what's selected.
