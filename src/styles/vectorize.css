@@ -1,0 +1,128 @@
+/* Vectorize (/vectorize): the editor's shell (canvas column + panel) holding the vectorizer, and its intro screen. */
+
+.vec-title { margin: 0 0 0 4px; font-size: var(--fs-14); font-weight: var(--fw-title); letter-spacing: var(--ls-15); white-space: nowrap; }
+.vec-file { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-14); color: var(--text-tertiary); }
+.vec-file::before { content: "/"; margin: 0 8px 0 2px; color: var(--fill-strong); }
+
+/* Stage: the picture pans and zooms inside it; the divider wipes the vector over the original. */
+.vec-stage { position: absolute; inset: 0; overflow: clip; cursor: grab; user-select: none; -webkit-user-select: none; touch-action: none; }
+.vec-stage[data-panning] { cursor: grabbing; }
+.vec-picture { position: absolute; overflow: hidden; transform-origin: 0 0; background: #fff repeating-conic-gradient(#eeeeee 0 25%, transparent 0 50%) 0 0 / 16px 16px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .05); }
+.vec-picture canvas, .vec-layer { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.vec-picture[data-pixel] canvas { image-rendering: pixelated; }
+.vec-picture canvas { transition: opacity var(--hover); }
+.vec-picture[data-outline] { background: var(--surface); color: var(--text); }
+.vec-picture[data-outline] canvas { opacity: 0; }
+.vec-layer svg { width: 100%; height: 100%; display: block; }
+.vec-layer[data-fade] { animation: vec-fade 150ms ease-out both; }
+@keyframes vec-fade { from { opacity: 0; } }
+
+.vec-split { position: absolute; top: 0; bottom: 0; width: 44px; margin-left: -22px; display: flex; align-items: center; justify-content: center; cursor: ew-resize; touch-action: none; opacity: 0; pointer-events: none; transition: opacity 120ms ease-out; }
+.vec-split[data-on] { opacity: 1; pointer-events: auto; }
+.vec-split::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px; background: var(--surface); box-shadow: 0 0 0 1px rgba(0, 0, 0, .12); }
+.vec-split-knob { position: relative; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--surface); color: var(--text); box-shadow: var(--shadow-float); transition: transform var(--duration-quick) var(--ease-smooth-out); }
+.vec-split:active .vec-split-knob { transform: scale(.97); }
+.vec-split:focus-visible { outline: none; }
+.vec-split:focus-visible .vec-split-knob { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.vec-tag, .vec-status { position: absolute; top: 12px; height: 24px; padding: 0 10px; display: flex; align-items: center; border-radius: var(--r-control); background: var(--surface); box-shadow: var(--shadow-float); font: var(--type-fine); color: var(--text-secondary); pointer-events: none; white-space: nowrap; opacity: 0; transition: opacity 120ms ease-out; }
+.vec-tag[data-on], .vec-status[data-on] { opacity: 1; }
+.vec-tag.left { left: 12px; }
+.vec-tag.right { right: 12px; }
+.vec-status { left: 50%; translate: -50% 0; }
+
+.vec-dock { position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; pointer-events: none; }
+.vec-dock > * { pointer-events: auto; }
+.vec-dock .segmented { background: var(--surface); box-shadow: var(--shadow-float); }
+.vec-dock .segmented .t-tabs-pill { background: var(--fill); box-shadow: none; }
+.vec-float { display: flex; align-items: center; padding: 2px; border-radius: var(--r-control); background: var(--surface); box-shadow: var(--shadow-float); }
+.vec-zoom-value { min-width: 52px; height: var(--h-control); padding: 0 6px; border: 0; border-radius: var(--r-control); background: transparent; font-size: var(--fs-13); font-weight: var(--fw-medium); color: var(--text); cursor: pointer; transition: background-color var(--hover); }
+.vec-zoom-value:not(:disabled):hover { background: var(--fill); }
+.vec-zoom-value:disabled { cursor: default; }
+
+/* Panel */
+.vec-swatch-ghost { display: block; background: var(--fill); box-shadow: none; cursor: default; }
+.vec-note { margin: 0; padding: 8px 11px 4px; font: var(--type-fine); color: var(--text-tertiary); }
+.row.swatches .vec-note { padding: 12px 0 0; }
+.vec-edit { border-top: 1px solid var(--hairline); }
+.vec-edit-controls { display: flex; align-items: center; gap: 8px; }
+.vec-hex { width: 84px; height: 28px; padding: 0 8px; border: 0; border-radius: var(--r-xs); background: var(--fill); font-size: var(--fs-13); color: var(--text); outline: none; box-shadow: inset 0 0 0 1.5px transparent; transition: box-shadow var(--hover); }
+.vec-hex:focus { box-shadow: inset 0 0 0 1.5px var(--text); }
+.vec-hex[aria-invalid="true"] { box-shadow: inset 0 0 0 1.5px #e5484d; }
+.vec-app .panel-footer { grid-template-columns: 1fr 1.6fr; }
+.vec-meta { grid-column: 1 / -1; margin: 0 2px 2px; font: var(--type-fine); color: var(--text-tertiary); }
+.vec-download { display: grid; }
+
+/* Switch: a plain pill toggle; the whole row is the hit area. */
+.switch-row { cursor: pointer; }
+.switch { position: relative; flex: none; width: 36px; height: 22px; padding: 0; border: 0; border-radius: 999px; background: var(--fill-strong); cursor: pointer; transition: background-color var(--duration-quick) var(--ease-smooth-out); }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .2); transition: transform 250ms var(--ease-smooth-out); }
+.switch[aria-checked="true"] { background: var(--primary); }
+.switch[aria-checked="true"]::after { transform: translateX(14px); }
+
+/* Entering from the intro (fluid-interfaces §2): every piece fades in fast and moves long, staggered by role
+   through --i (header 0, panel 1, first tray and the dock 2, later trays, footer 5). The picture grows from the
+   sample tile on its own clock (Stage). */
+.vec-app.is-entering .canvas-bar,
+.vec-app.is-entering .tray,
+.vec-app.is-entering .panel-footer,
+.vec-app.is-entering .vec-dock { animation: vec-rise-fade 140ms ease-out both, vec-rise-move 420ms var(--ease-smooth-out) both; animation-delay: calc(var(--i, 0) * 30ms); }
+.vec-app.is-entering .panel { animation: vec-fade 140ms ease-out both, vec-slide-in 420ms var(--ease-smooth-out) both; animation-delay: 30ms; }
+@keyframes vec-rise-fade { from { opacity: 0; } }
+@keyframes vec-rise-move { from { transform: translateY(16px); } }
+@keyframes vec-slide-in { from { transform: translateX(24px); } }
+
+/* Intro */
+.vec-app.is-intro { height: auto; min-height: 100dvh; display: block; padding: 0; }
+.vec-intro { max-width: 1040px; margin: 0 auto; padding: 0 24px 72px; }
+.vec-intro a { color: inherit; text-decoration: none; }
+/* Leaving: it sits over the workspace and clears first, drifting up (fluid-interfaces §2). */
+.vec-intro[data-leaving] { position: fixed; inset: 0; z-index: 30; max-width: none; overflow: hidden; background: var(--frame); animation: vec-leave 90ms ease-out both; pointer-events: none; }
+.vec-intro[data-leaving] > * { max-width: 992px; margin-left: auto; margin-right: auto; }
+@keyframes vec-leave { to { opacity: 0; transform: translateY(-10px); } }
+
+.vec-hero { max-width: 620px; padding: 72px 0 40px; }
+.vec-hero h1 { margin: 0; font-size: 40px; line-height: 44px; font-weight: var(--fw-title); letter-spacing: -.022em; color: var(--ink); }
+.vec-hero p { margin: 16px 0 28px; font-size: var(--fs-15); line-height: 1.55; color: var(--text-secondary); }
+.vec-hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; }
+.vec-hero-hint { font-size: var(--fs-14); color: var(--text-tertiary); }
+
+.vec-demo { margin: 0; padding: 12px; border-radius: 24px; background: #e9e9ea; }
+.vec-demo-picture { position: relative; aspect-ratio: 3 / 2; max-height: 460px; margin: 0 auto; overflow: hidden; border-radius: 12px; background: #fff; cursor: ew-resize; }
+.vec-demo-picture canvas, .vec-demo-vector { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.vec-demo-picture canvas { image-rendering: pixelated; }
+.vec-demo-vector { background: #fff; }
+.vec-demo-vector svg { width: 100%; height: 100%; display: block; }
+.vec-demo-vector { animation: vec-fade 150ms ease-out both; }
+.vec-demo-divider { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--surface); box-shadow: 0 0 0 1px rgba(0, 0, 0, .12); opacity: 0; transition: opacity 120ms ease-out; }
+.vec-demo-divider[data-on] { opacity: 1; }
+.vec-demo figcaption { display: flex; justify-content: space-between; padding: 12px 6px 2px; font: var(--type-fine); color: var(--text-secondary); }
+
+.vec-samples-section { padding-top: 40px; }
+.vec-samples-section h2 { margin: 0 0 16px; font: var(--type-title); letter-spacing: var(--type-title-ls); color: var(--ink); }
+.vec-samples { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.vec-sample { min-width: 0; display: grid; gap: 2px; padding: 0; border: 0; background: none; text-align: left; cursor: pointer; }
+.vec-sample-art { min-width: 0; overflow: hidden; display: grid; place-items: center; aspect-ratio: 3 / 2; margin-bottom: 10px; padding: 16px; border-radius: 16px; background: #e9e9ea; transition: background-color var(--hover); }
+.vec-sample:hover .vec-sample-art { background: #e2e2e3; }
+.vec-sample:active .vec-sample-art { transform: scale(.97); }
+.vec-sample-art { transition: background-color var(--hover), transform var(--duration-quick) var(--ease-smooth-out); }
+.vec-sample canvas { width: 100%; height: 100%; min-width: 0; object-fit: contain; border-radius: 6px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .05), 0 6px 16px rgba(0, 0, 0, .06); }
+.vec-sample canvas[data-pixel] { image-rendering: pixelated; }
+.vec-sample-name { font-size: var(--fs-14); font-weight: var(--fw-medium); color: var(--text); }
+.vec-sample-detail { font-size: var(--fs-13); color: var(--text-tertiary); }
+
+@media (max-width: 860px) {
+  .vec-app .canvas-column { position: static; margin: 0; padding: 0; }
+  .vec-hero { padding: 40px 0 28px; }
+  .vec-hero h1 { font-size: 32px; line-height: 36px; }
+  .vec-samples { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .vec-sample-art { padding: 8px; border-radius: 12px; }
+  .vec-sample-detail { display: none; }
+  .vec-tag { display: none; }
+}
+/* On a phone the view switcher takes the dock; zoom is a pinch. */
+@media (max-width: 560px) { .vec-zoom { display: none; } .vec-dock { justify-content: center; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .vec-app.is-entering *, .vec-intro[data-leaving], .vec-layer[data-fade], .vec-demo-vector { animation-duration: 1ms !important; animation-delay: 0ms !important; }
+}

@@ -162,6 +162,14 @@ export function PositionGrid({ x, y, reach, onChange }: { x: number; y: number; 
   </div>;
 }
 
+// An on/off row: the label on the left, the switch on the right. The whole row is the hit area.
+export function Switch({ label, checked, onChange }: { label: string; checked: boolean; onChange: (on: boolean) => void }) {
+  return <label className="row switch-row">
+    <span className="row-label">{label}</span>
+    <button type="button" role="switch" className="switch" aria-checked={checked} aria-label={label} onClick={() => onChange(!checked)} />
+  </label>;
+}
+
 export function ColorChip({ label, value, onChange, begin, end }: { label: string; value: string; onChange: (hex: string) => void; begin: () => void; end: () => void }) {
   return <label className="color-chip" style={{ background: value }} title={`${label} ${value.toUpperCase()}`}>
     <input type="color" aria-label={label} value={value} onFocus={begin} onBlur={end} onChange={e => onChange(e.target.value)} />
